@@ -33,7 +33,6 @@ const withLinks = editor => {
     return element.type === 'link' ? true : isInline(element)
   }
 
-  // TODO: 在什么情况下会是insertText
   editor.insertText = text => {
     if (text && isUrl(text)) {
       wrapLink(editor, text)
