@@ -1,5 +1,6 @@
 import { Editor, Transforms, Node } from 'slate'
 import React from 'react'
+import {css} from 'emotion'
 
 export const withCodeBlock = editor => {
   const { insertBreak } = editor
@@ -53,9 +54,17 @@ export const toggleCodeBlock = editor => {
   }
 }
 
-export const CodeBlockElement = ({ attributes, children, element }) => {
+export const CodeBlock = ({ attributes, children }) => {
   return (
-    <pre {...attributes}>
+    <pre
+      {...attributes}
+      className={css`
+        padding: 15px;
+        margin-bottom: 10px;
+        background-color: #f1f1f1;
+        line-height: 1.3;
+      `}
+    >
       <code>{children}</code>
     </pre>
   )

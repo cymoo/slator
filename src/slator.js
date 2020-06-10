@@ -5,6 +5,7 @@ import { Editor, Transforms, createEditor } from 'slate'
 import { withHistory } from 'slate-history'
 
 import { Button, Icon, Toolbar } from './components'
+import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -19,20 +20,23 @@ const Slator = () => {
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-  const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+  const editor = useMemo(() => withHistory(withCodeBlock(withReact(createEditor()))), [])
 
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <Toolbar>
-        <MarkButton format="bold" icon="format_bold" />
-        <MarkButton format="italic" icon="format_italic" />
-        <MarkButton format="underline" icon="format_underlined" />
-        <MarkButton format="code" icon="code" />
-        <BlockButton format="heading-one" icon="looks_one" />
-        <BlockButton format="heading-two" icon="looks_two" />
-        <BlockButton format="block-quote" icon="format_quote" />
-        <BlockButton format="numbered-list" icon="format_list_numbered" />
-        <BlockButton format="bulleted-list" icon="format_list_bulleted" />
+        <MarkButton format="bold" icon="format-bold" />
+        <MarkButton format="italic" icon="format-italic" />
+        <MarkButton format="underline" icon="format-underlined" />
+        <BlockButton format="code-block" icon="code" />
+        <BlockButton format="heading-one" icon="format-header1" />
+        <BlockButton format="heading-two" icon="format-header2" />
+        <BlockButton format="block-quote" icon="format-quote" />
+        <BlockButton format="numbered-list" icon="format-list-numbered" />
+        <BlockButton format="bulleted-list" icon="format-list-bulleted" />
+
+        <MarkButton format="link" icon="link" />
+        <BlockButton format="image" icon="image" />
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -55,6 +59,10 @@ const Slator = () => {
 }
 
 const toggleBlock = (editor, format) => {
+  if (format === 'code-block') {
+    toggleCodeBlock(editor)
+    return
+  }
   const isActive = isBlockActive(editor, format)
   const isList = LIST_TYPES.includes(format)
 
@@ -98,6 +106,8 @@ const isMarkActive = (editor, format) => {
 
 const Element = ({ attributes, children, element }) => {
   switch (element.type) {
+    case 'code-block':
+      return <CodeBlock attributes={attributes} children={children}/>
     case 'block-quote':
       return <blockquote {...attributes}>{children}</blockquote>
     case 'bulleted-list':
@@ -145,7 +155,8 @@ const BlockButton = ({ format, icon }) => {
         toggleBlock(editor, format)
       }}
     >
-      <Icon>{icon}</Icon>
+      {/*<Icon>{icon}</Icon>*/}
+      <Icon type={icon} />
     </Button>
   )
 }
@@ -160,7 +171,7 @@ const MarkButton = ({ format, icon }) => {
         toggleMark(editor, format)
       }}
     >
-      <Icon>{icon}</Icon>
+      <Icon type={icon} />
     </Button>
   )
 }

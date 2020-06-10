@@ -7,5 +7,5 @@ dist/
 lib/
 node_modules/
 packages/*/yarn.lock
-site/out/
+example/out/
 tmp/

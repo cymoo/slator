@@ -234,7 +234,7 @@ const initialValue = [
     children: [
       {
         text:
-          "Try it out for yourself! Copy and paste some rendered HTML rich text content (not the source code) from another site into this editor and it's formatting should be preserved.",
+          "Try it out for yourself! Copy and paste some rendered HTML rich text content (not the source code) from another example into this editor and it's formatting should be preserved.",
       },
     ],
   },

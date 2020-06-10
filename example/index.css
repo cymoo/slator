@@ -1,0 +1,50 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  position: relative;
+  font-size: 14px;
+}
+
+body {
+  position: relative;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: normal;
+  color: #333;
+  background-color: #fff;
+}
+
+code {
+  font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+blockquote {
+  border-left: 2px solid #ddd;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 10px;
+  color: #aaa;
+  font-style: italic;
+}
+
+h1, h2, h3, h4, h5, h6, p, pre {
+  margin: 0;
+  padding: 0;
+}
+
+ul, ol {
+  padding: 0;
+}
+
+li {
+  padding: 0;
+  list-style: none;
+}
+
+p {
+  margin-bottom: 10px;
+}

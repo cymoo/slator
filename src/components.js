@@ -1,6 +1,34 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { cx, css } from 'emotion'
+import MDIcon from '@mdi/react'
+import {
+  mdiFormatBold,
+  mdiFormatItalic,
+  mdiFormatUnderline,
+  mdiCodeBraces,
+  mdiFormatHeader1,
+  mdiFormatHeader2,
+  mdiFormatQuoteOpen,
+  mdiFormatListNumbered,
+  mdiFormatListBulleted,
+  mdiImage,
+  mdiLink,
+} from '@mdi/js'
+
+const icons = {
+  'format-bold': mdiFormatBold,
+  'format-italic': mdiFormatItalic,
+  'format-underlined': mdiFormatUnderline,
+  'code': mdiCodeBraces,
+  'format-header1': mdiFormatHeader1,
+  'format-header2': mdiFormatHeader2,
+  'format-quote': mdiFormatQuoteOpen,
+  'format-list-numbered': mdiFormatListNumbered,
+  'format-list-bulleted': mdiFormatListBulleted,
+  'image': mdiImage,
+  'link': mdiLink,
+}
 
 export const Button = React.forwardRef(
   ({ className, active, reversed, ...props }, ref) => (
@@ -70,20 +98,45 @@ export const EditorValue = React.forwardRef(
   }
 )
 
-export const Icon = React.forwardRef(({ className, ...props }, ref) => (
-  <span
-    {...props}
-    ref={ref}
-    className={cx(
-      'material-icons',
-      className,
-      css`
-        font-size: 18px;
-        vertical-align: text-bottom;
-      `
-    )}
-  />
-))
+// export const Icon = React.forwardRef(({ className, ...props }, ref) => (
+//   <span
+//     {...props}
+//     ref={ref}
+//     className={cx(
+//       'material-icons',
+//       className,
+//       css`
+//         font-size: 18px;
+//         vertical-align: text-bottom;
+//       `
+//     )}
+//   />
+// ))
+
+export const Icon = React.forwardRef((props, ref) => {
+  const {
+    className,
+    type,
+    size,
+    color,
+    ...rest
+  } = props
+  const path = icons[type]
+
+  return (
+    <MDIcon
+      className={cx(className)}
+      path={path}
+      size={size}
+      // color={color}
+      {...rest}
+    />
+  )
+})
+
+Icon.defaultProps = {
+  size: 0.9,
+}
 
 export const Instruction = React.forwardRef(({ className, ...props }, ref) => (
   <div
