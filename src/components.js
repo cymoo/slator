@@ -44,8 +44,9 @@ export const Button = React.forwardRef(
               ? 'white'
               : '#aaa'
             : active
-            ? 'black'
-            : '#ccc'};
+            ? '#333'
+            : '#999'};
+          transition: all .2s ease-in;
         `
       )}
     />
