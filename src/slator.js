@@ -1,11 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import isHotkey from 'is-hotkey'
-import { Editable, withReact, useSlate, Slate } from 'slate-react'
+import { Editable, withReact, useSlate, Slate, useSelected, useFocused } from "slate-react";
 import { Editor, Transforms, createEditor } from 'slate'
 import { withHistory } from 'slate-history'
 
 import { Button, Icon, Toolbar } from './components'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
+import { withLinks, LinkButton } from './links'
+import { withImages, ImageButton} from './images'
+import { css } from "emotion";
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -20,7 +23,9 @@ const Slator = () => {
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-  const editor = useMemo(() => withHistory(withCodeBlock(withReact(createEditor()))), [])
+  const editor = useMemo(() => withHistory(
+    withImages(withLinks(withCodeBlock(withReact(createEditor()))))), []
+  )
 
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
@@ -34,9 +39,8 @@ const Slator = () => {
         <BlockButton format="block-quote" icon="format-quote" />
         <BlockButton format="numbered-list" icon="format-list-numbered" />
         <BlockButton format="bulleted-list" icon="format-list-bulleted" />
-
-        <MarkButton format="link" icon="link" />
-        <BlockButton format="image" icon="image" />
+        <LinkButton />
+        <ImageButton />
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -105,9 +109,31 @@ const isMarkActive = (editor, format) => {
 }
 
 const Element = ({ attributes, children, element }) => {
+  const selected = useSelected()
+  const focused = useFocused()
+
   switch (element.type) {
+    case 'image':
+      return (
+        <div {...attributes}>
+          <div contentEditable={false} style={{textAlign: 'center'}}>
+            <img
+              src={element.url}
+              className={css`
+                display: inline-block;
+                width: 100%;
+                height: auto;
+                box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
+              `}
+            />
+          </div>
+          {children}
+        </div>
+      )
+    case 'link':
+      return <a {...attributes} href={element.url}>{children}</a>
     case 'code-block':
-      return <CodeBlock attributes={attributes} children={children}/>
+      return <CodeBlock attributes={attributes}>{children}</CodeBlock>
     case 'block-quote':
       return <blockquote {...attributes}>{children}</blockquote>
     case 'bulleted-list':
@@ -149,6 +175,7 @@ const BlockButton = ({ format, icon }) => {
   const editor = useSlate()
   return (
     <Button
+      title={format}
       active={isBlockActive(editor, format)}
       onMouseDown={event => {
         event.preventDefault()

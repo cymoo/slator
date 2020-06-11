@@ -1,41 +1,13 @@
-import React, { useState, useMemo } from 'react'
+import React from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
-import { Transforms, createEditor } from 'slate'
-import {
-  Slate,
-  Editable,
-  useEditor,
-  useSelected,
-  useFocused,
-  withReact,
-} from 'slate-react'
-import { withHistory } from 'slate-history'
-import { css } from 'emotion'
+import { Editor, Transforms } from "slate";
+import { useEditor } from 'slate-react'
+import { randomString } from './utils'
 
-import { Button, Icon, Toolbar } from './components'
+import { Button, Icon } from './components'
 
-const ImagesExample = () => {
-  const [value, setValue] = useState(initialValue)
-  const editor = useMemo(
-    () => withImages(withHistory(withReact(createEditor()))),
-    []
-  )
-
-  return (
-    <Slate editor={editor} value={value} onChange={value => setValue(value)}>
-      <Toolbar>
-        <InsertImageButton />
-      </Toolbar>
-      <Editable
-        renderElement={props => <Element {...props} />}
-        placeholder="Enter some text..."
-      />
-    </Slate>
-  )
-}
-
-const withImages = editor => {
+export const withImages = editor => {
   const { insertData, isVoid } = editor
 
   editor.isVoid = element => {
@@ -70,58 +42,69 @@ const withImages = editor => {
   return editor
 }
 
-const insertImage = (editor, url) => {
-  const text = { text: '' }
-  const image = { type: 'image', url, children: [text] }
-  Transforms.insertNodes(editor, image)
+export const ImageButton = () => {
+  const editor = useEditor()
+  const ref = React.useRef()
+
+  return (
+    <Button
+      onMouseDown={(event) => {
+        event.preventDefault()
+        console.log(randomString())
+        ref.current.click()
+      }}
+    >
+      <Icon type="image"/>
+      <input
+        type="file"
+        ref={ref}
+        style={{display: 'none'}}
+        onChange={() => {
+          uploadImage(
+            editor,
+            ref.current.files[0],
+            () => {
+              return new Promise(resolve => {
+                setTimeout(() => {
+                  resolve({url: 'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn'})
+                }, 1000)
+              })
+            })
+        }}
+      />
+    </Button>
+  )
 }
 
-const Element = props => {
-  const { attributes, children, element } = props
+const uploadImage = (editor, file, request) => {
+  const reader = new FileReader()
+  reader.readAsDataURL(file)
 
-  switch (element.type) {
-    case 'image':
-      return <ImageElement {...props} />
-    default:
-      return <p {...attributes}>{children}</p>
+  reader.onload = () => {
+    const id = randomString()
+    insertImage(editor, reader.result, id)
+
+    request().then(data => {
+      const [match] = Editor.nodes(editor, {
+        match: node => node.id === id
+      })
+      if (match) {
+        Transforms.setNodes(editor, {url: data.url}, {at: match[1]})
+      }
+    }).catch(err => {
+
+    })
+  }
+
+  reader.onerror = () => {
+
   }
 }
 
-const ImageElement = ({ attributes, children, element }) => {
-  const selected = useSelected()
-  const focused = useFocused()
-  return (
-    <div {...attributes}>
-      <div contentEditable={false}>
-        <img
-          src={element.url}
-          className={css`
-            display: block;
-            max-width: 100%;
-            max-height: 20em;
-            box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
-          `}
-        />
-      </div>
-      {children}
-    </div>
-  )
-}
-
-const InsertImageButton = () => {
-  const editor = useEditor()
-  return (
-    <Button
-      onMouseDown={event => {
-        event.preventDefault()
-        const url = window.prompt('Enter the URL of the image:')
-        if (!url) return
-        insertImage(editor, url)
-      }}
-    >
-      <Icon>image</Icon>
-    </Button>
-  )
+const insertImage = (editor, url, id) => {
+  const text = { text: '' }
+  const image = { type: 'image', url, id, children: [text] }
+  Transforms.insertNodes(editor, image)
 }
 
 const isImageUrl = url => {
@@ -130,31 +113,3 @@ const isImageUrl = url => {
   const ext = new URL(url).pathname.split('.').pop()
   return imageExtensions.includes(ext)
 }
-
-const initialValue = [
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          'In addition to nodes that contain editable text, you can also create other types of nodes, like images or videos.',
-      },
-    ],
-  },
-  {
-    type: 'image',
-    url: 'https://source.unsplash.com/kFrdX5IeQzI',
-    children: [{ text: '' }],
-  },
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          'This example shows images in action. It features two ways to add images. You can either add an image via the toolbar icon above, or if you want in on a little secret, copy an image URL to your keyboard and paste it anywhere in the editor!',
-      },
-    ],
-  },
-]
-
-export default ImagesExample
