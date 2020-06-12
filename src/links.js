@@ -1,18 +1,20 @@
-import React from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import isUrl from 'is-url'
-import { useSlate } from 'slate-react'
+import { useSlate, useEditor, ReactEditor } from 'slate-react'
 import { Transforms, Editor, Range } from 'slate'
 
 import { Button, Icon } from './components'
+import { css, cx } from 'emotion'
+import { useClickAway } from './utils'
 
-export const withLinks = editor => {
+export const withLinks = (editor) => {
   const { insertData, insertText, isInline } = editor
 
-  editor.isInline = element => {
+  editor.isInline = (element) => {
     return element.type === 'link' ? true : isInline(element)
   }
 
-  editor.insertText = text => {
+  editor.insertText = (text) => {
     if (text && isUrl(text)) {
       wrapLink(editor, text)
     } else {
@@ -20,7 +22,7 @@ export const withLinks = editor => {
     }
   }
 
-  editor.insertData = data => {
+  editor.insertData = (data) => {
     const text = data.getData('text/plain')
 
     if (text && isUrl(text)) {
@@ -33,12 +35,12 @@ export const withLinks = editor => {
   return editor
 }
 
-export const LinkButton = () => {
+export const LinkButton1 = () => {
   const editor = useSlate()
   return (
     <Button
       active={isLinkActive(editor)}
-      onMouseDown={event => {
+      onMouseDown={(event) => {
         event.preventDefault()
         if (isLinkActive(editor)) {
           unwrapLink(editor)
@@ -54,6 +56,80 @@ export const LinkButton = () => {
     </Button>
   )
 }
+export const LinkButton = () => {
+  // TODO: 搞清楚useSlate和useEditor的区别...
+  const editor = useSlate()
+  // const editor = useEditor()
+  const selection = useRef(null)
+  const [show, setShow] = useState(false)
+  const [position, setPosition] = useState([-10000, -10000])
+
+  const handleClickAway = useCallback(() => {
+    if (show) {
+      setShow(false)
+    }
+  }, [show])
+  const ref = useClickAway(handleClickAway)
+
+  useEffect(() => {
+    if (editor.selection) {
+      selection.current = editor.selection
+    }
+  })
+
+  return (
+    <Button
+      active={isLinkActive(editor)}
+      ref={ref}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setShow(false)
+        }
+      }}
+      onMouseDown={(event) => {
+        event.preventDefault()
+        if (isLinkActive(editor)) {
+          unwrapLink(editor)
+          return
+        }
+
+        if (!show) {
+          const el = ref.current
+          const rect = el.getBoundingClientRect()
+          const top = rect.height
+          const left = rect.width / 2 - 102
+          setPosition([top, left])
+        }
+        setShow((show) => !show)
+      }}
+    >
+      <Icon type="link" />
+      {show && (
+        <TooltipInput
+          top={position[0]}
+          left={position[1]}
+          onEnter={(url) => {
+            setShow(false)
+            if (url) {
+              // TODO: 待重新实现link逻辑
+              // insertLink(editor, url)
+              const link = {
+                type: 'link',
+                url,
+                children: [],
+              }
+              Transforms.wrapNodes(editor, link, {
+                at: selection.current,
+                split: true,
+              })
+            }
+          }}
+        />
+      )}
+    </Button>
+  )
+}
 
 const insertLink = (editor, url) => {
   if (editor.selection) {
@@ -61,13 +137,13 @@ const insertLink = (editor, url) => {
   }
 }
 
-const isLinkActive = editor => {
-  const [link] = Editor.nodes(editor, { match: n => n.type === 'link' })
+const isLinkActive = (editor) => {
+  const [link] = Editor.nodes(editor, { match: (n) => n.type === 'link' })
   return !!link
 }
 
-const unwrapLink = editor => {
-  Transforms.unwrapNodes(editor, { match: n => n.type === 'link' })
+const unwrapLink = (editor) => {
+  Transforms.unwrapNodes(editor, { match: (n) => n.type === 'link' })
 }
 
 const wrapLink = (editor, url) => {
@@ -89,4 +165,118 @@ const wrapLink = (editor, url) => {
     Transforms.wrapNodes(editor, link, { split: true })
     Transforms.collapse(editor, { edge: 'end' })
   }
+}
+
+// TEST
+const Tooltip = (props) => {
+  const {
+    width,
+    height,
+    arrow,
+    children,
+    className,
+    left,
+    top,
+    ...rest
+  } = props
+  let style
+  if (arrow === 'top') {
+    style = css`
+      border-bottom: 6px solid #444;
+      top: -6px;
+    `
+  } else {
+    style = css`
+      border-top: 6px solid #444;
+      top: -6px;
+    `
+  }
+
+  return (
+    <div
+      className={cx(
+        className,
+        css`
+          position: absolute;
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          transform: translateY(10px);
+          left: ${left}px;
+          top: ${top}px;
+          width: ${width}px;
+          height: ${height}px;
+          background-color: #444;
+          border-radius: 25px;
+          color: #fff;
+        `
+      )}
+      onClick={(event) => {
+        event.stopPropagation()
+      }}
+      {...rest}
+    >
+      <span
+        className={cx(
+          style,
+          css`
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            content: ' ';
+            display: block;
+            left: 50%;
+            margin-left: -6px;
+            position: absolute;
+          `
+        )}
+      />
+      {children}
+    </div>
+  )
+}
+
+Tooltip.defaultProps = {
+  width: 204,
+  height: 40,
+  arrow: 'top',
+}
+
+const TooltipInput = (props) => {
+  const [value, setValue] = useState('')
+  const { placeholder, onEnter, ...rest } = props
+  const ref = useRef()
+
+  useEffect(() => {
+    ref.current.focus()
+  })
+
+  return (
+    <Tooltip {...rest}>
+      <input
+        ref={ref}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            onEnter(value)
+          }
+        }}
+        type="text"
+        placeholder={placeholder}
+        className={css`
+          width: 100%;
+          font-size: 13px;
+          border: none;
+          background: transparent;
+          outline: none;
+          color: #fff;
+        `}
+      />
+    </Tooltip>
+  )
+}
+
+TooltipInput.defaultProps = {
+  placeholder: '链接地址',
 }

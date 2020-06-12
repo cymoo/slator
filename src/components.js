@@ -20,14 +20,14 @@ const icons = {
   'format-bold': mdiFormatBold,
   'format-italic': mdiFormatItalic,
   'format-underlined': mdiFormatUnderline,
-  'code': mdiCodeBraces,
+  code: mdiCodeBraces,
   'format-header1': mdiFormatHeader1,
   'format-header2': mdiFormatHeader2,
   'format-quote': mdiFormatQuoteOpen,
   'format-list-numbered': mdiFormatListNumbered,
   'format-list-bulleted': mdiFormatListBulleted,
-  'image': mdiImage,
-  'link': mdiLink,
+  image: mdiImage,
+  link: mdiLink,
 }
 
 export const Button = React.forwardRef(
@@ -38,6 +38,7 @@ export const Button = React.forwardRef(
       className={cx(
         className,
         css`
+          position: relative;
           cursor: pointer;
           color: ${reversed
             ? active
@@ -46,7 +47,7 @@ export const Button = React.forwardRef(
             : active
             ? '#333'
             : '#999'};
-          transition: all .2s ease-in;
+          transition: all 0.2s ease-in;
         `
       )}
     />
@@ -56,7 +57,7 @@ export const Button = React.forwardRef(
 export const EditorValue = React.forwardRef(
   ({ className, value, ...props }, ref) => {
     const textLines = value.document.nodes
-      .map(node => node.text)
+      .map((node) => node.text)
       .toArray()
       .join('\n')
     return (
@@ -115,13 +116,7 @@ export const EditorValue = React.forwardRef(
 // ))
 
 export const Icon = React.forwardRef((props, ref) => {
-  const {
-    className,
-    type,
-    size,
-    color,
-    ...rest
-  } = props
+  const { className, type, size, color, ...rest } = props
   const path = icons[type]
 
   return (

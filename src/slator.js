@@ -1,14 +1,21 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import isHotkey from 'is-hotkey'
-import { Editable, withReact, useSlate, Slate, useSelected, useFocused } from "slate-react";
+import {
+  Editable,
+  withReact,
+  useSlate,
+  Slate,
+  useSelected,
+  useFocused,
+} from 'slate-react'
 import { Editor, Transforms, createEditor } from 'slate'
 import { withHistory } from 'slate-history'
 
 import { Button, Icon, Toolbar } from './components'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 import { withLinks, LinkButton } from './links'
-import { withImages, ImageButton} from './images'
-import { css } from "emotion";
+import { withImages, ImageButton } from './images'
+import { css } from 'emotion'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -21,14 +28,18 @@ const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const Slator = () => {
   const [value, setValue] = useState(initialValue)
-  const renderElement = useCallback(props => <Element {...props} />, [])
-  const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-  const editor = useMemo(() => withHistory(
-    withImages(withLinks(withCodeBlock(withReact(createEditor()))))), []
+  const renderElement = useCallback((props) => <Element {...props} />, [])
+  const renderLeaf = useCallback((props) => <Leaf {...props} />, [])
+  const editor = useMemo(
+    () =>
+      withHistory(
+        withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+      ),
+    []
   )
 
   return (
-    <Slate editor={editor} value={value} onChange={value => setValue(value)}>
+    <Slate editor={editor} value={value} onChange={(value) => setValue(value)}>
       <Toolbar>
         <MarkButton format="bold" icon="format-bold" />
         <MarkButton format="italic" icon="format-italic" />
@@ -48,7 +59,7 @@ const Slator = () => {
         placeholder="Enter some rich text…"
         spellCheck
         autoFocus
-        onKeyDown={event => {
+        onKeyDown={(event) => {
           for (const hotkey in HOTKEYS) {
             if (isHotkey(hotkey, event)) {
               event.preventDefault()
@@ -71,7 +82,7 @@ const toggleBlock = (editor, format) => {
   const isList = LIST_TYPES.includes(format)
 
   Transforms.unwrapNodes(editor, {
-    match: n => LIST_TYPES.includes(n.type),
+    match: (n) => LIST_TYPES.includes(n.type),
     split: true,
   })
 
@@ -97,7 +108,7 @@ const toggleMark = (editor, format) => {
 
 const isBlockActive = (editor, format) => {
   const [match] = Editor.nodes(editor, {
-    match: n => n.type === format,
+    match: (n) => n.type === format,
   })
 
   return !!match
@@ -116,14 +127,19 @@ const Element = ({ attributes, children, element }) => {
     case 'image':
       return (
         <div {...attributes}>
-          <div contentEditable={false} style={{textAlign: 'center'}}>
+          <div
+            contentEditable={false}
+            style={{ textAlign: 'center', marginBottom: 10 }}
+          >
             <img
               src={element.url}
               className={css`
                 display: inline-block;
                 width: 100%;
                 height: auto;
-                box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
+                box-shadow: ${selected && focused
+                  ? '0 0 0 3px #B4D5FF'
+                  : 'none'};
               `}
             />
           </div>
@@ -131,7 +147,11 @@ const Element = ({ attributes, children, element }) => {
         </div>
       )
     case 'link':
-      return <a {...attributes} href={element.url}>{children}</a>
+      return (
+        <a {...attributes} href={element.url}>
+          {children}
+        </a>
+      )
     case 'code-block':
       return <CodeBlock attributes={attributes}>{children}</CodeBlock>
     case 'block-quote':
@@ -177,12 +197,12 @@ const BlockButton = ({ format, icon }) => {
     <Button
       title={format}
       active={isBlockActive(editor, format)}
-      onMouseDown={event => {
+      onMouseDown={(event) => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
     >
-      {/*<Icon>{icon}</Icon>*/}
+      {/* <Icon>{icon}</Icon>*/}
       <Icon type={icon} />
     </Button>
   )
@@ -193,7 +213,7 @@ const MarkButton = ({ format, icon }) => {
   return (
     <Button
       active={isMarkActive(editor, format)}
-      onMouseDown={event => {
+      onMouseDown={(event) => {
         event.preventDefault()
         toggleMark(editor, format)
       }}

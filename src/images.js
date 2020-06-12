@@ -1,20 +1,31 @@
 import React from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
-import { Editor, Transforms } from "slate";
+import { Editor, Transforms } from 'slate'
 import { useEditor } from 'slate-react'
 import { randomString } from './utils'
 
 import { Button, Icon } from './components'
 
-export const withImages = editor => {
-  const { insertData, isVoid } = editor
+export const withImages = (editor) => {
+  const { insertData, isVoid, insertBreak } = editor
 
-  editor.isVoid = element => {
+  editor.isVoid = (element) => {
     return element.type === 'image' ? true : isVoid(element)
   }
 
-  editor.insertData = data => {
+  editor.insertBreak = () => {
+    const [match] = Editor.nodes(editor, {
+      match: (node) => node.type === 'image',
+    })
+    if (match) {
+      editor.insertNode({ type: 'paragraph', children: [{ text: '' }] })
+    } else {
+      insertBreak()
+    }
+  }
+
+  editor.insertData = (data) => {
     const text = data.getData('text/plain')
     const { files } = data
 
@@ -50,26 +61,26 @@ export const ImageButton = () => {
     <Button
       onMouseDown={(event) => {
         event.preventDefault()
-        console.log(randomString())
         ref.current.click()
       }}
     >
-      <Icon type="image"/>
+      <Icon type="image" />
       <input
         type="file"
         ref={ref}
-        style={{display: 'none'}}
+        style={{ display: 'none' }}
         onChange={() => {
-          uploadImage(
-            editor,
-            ref.current.files[0],
-            () => {
-              return new Promise(resolve => {
-                setTimeout(() => {
-                  resolve({url: 'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn'})
-                }, 1000)
-              })
+          uploadImage(editor, ref.current.files[0], () => {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                ref.current.value = ''
+                resolve({
+                  url:
+                    'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
+                })
+              }, 1000)
             })
+          })
         }}
       />
     </Button>
@@ -84,21 +95,19 @@ const uploadImage = (editor, file, request) => {
     const id = randomString()
     insertImage(editor, reader.result, id)
 
-    request().then(data => {
-      const [match] = Editor.nodes(editor, {
-        match: node => node.id === id
+    request()
+      .then((data) => {
+        const [match] = Editor.nodes(editor, {
+          match: (node) => node.id === id,
+        })
+        if (match) {
+          Transforms.setNodes(editor, { url: data.url }, { at: match[1] })
+        }
       })
-      if (match) {
-        Transforms.setNodes(editor, {url: data.url}, {at: match[1]})
-      }
-    }).catch(err => {
-
-    })
+      .catch((err) => {})
   }
 
-  reader.onerror = () => {
-
-  }
+  reader.onerror = () => {}
 }
 
 const insertImage = (editor, url, id) => {
@@ -107,7 +116,7 @@ const insertImage = (editor, url, id) => {
   Transforms.insertNodes(editor, image)
 }
 
-const isImageUrl = url => {
+const isImageUrl = (url) => {
   if (!url) return false
   if (!isUrl(url)) return false
   const ext = new URL(url).pathname.split('.').pop()
