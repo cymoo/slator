@@ -60,17 +60,16 @@ export const LinkButton = () => {
   // TODO: 搞清楚useSlate和useEditor的区别...
   const editor = useSlate()
   // const editor = useEditor()
-  const selection = useRef(null)
   const [show, setShow] = useState(false)
   const [position, setPosition] = useState([-10000, -10000])
 
-  const handleClickAway = useCallback(() => {
-    if (show) {
-      setShow(false)
-    }
-  }, [show])
-  const ref = useClickAway(handleClickAway)
+  const ref = useClickAway(
+    useCallback(() => {
+      show && setShow(false)
+    }, [show])
+  )
 
+  const selection = useRef(null)
   useEffect(() => {
     if (editor.selection) {
       selection.current = editor.selection
@@ -89,6 +88,9 @@ export const LinkButton = () => {
       }}
       onMouseDown={(event) => {
         event.preventDefault()
+        if (event.target.tagName.toLowerCase() === 'input') {
+          return
+        }
         if (isLinkActive(editor)) {
           unwrapLink(editor)
           return
@@ -112,17 +114,7 @@ export const LinkButton = () => {
           onEnter={(url) => {
             setShow(false)
             if (url) {
-              // TODO: 待重新实现link逻辑
-              // insertLink(editor, url)
-              const link = {
-                type: 'link',
-                url,
-                children: [],
-              }
-              Transforms.wrapNodes(editor, link, {
-                at: selection.current,
-                split: true,
-              })
+              insertLink(editor, url, selection.current)
             }
           }}
         />
@@ -131,9 +123,9 @@ export const LinkButton = () => {
   )
 }
 
-const insertLink = (editor, url) => {
-  if (editor.selection) {
-    wrapLink(editor, url)
+const insertLink = (editor, url, selection) => {
+  if (selection) {
+    wrapLink(editor, url, selection)
   }
 }
 
@@ -146,12 +138,12 @@ const unwrapLink = (editor) => {
   Transforms.unwrapNodes(editor, { match: (n) => n.type === 'link' })
 }
 
-const wrapLink = (editor, url) => {
-  if (isLinkActive(editor)) {
-    unwrapLink(editor)
-  }
+const wrapLink = (editor, url, selection) => {
+  // if (isLinkActive(editor)) {
+  //   unwrapLink(editor)
+  // }
 
-  const { selection } = editor
+  // const { selection } = editor
   const isCollapsed = selection && Range.isCollapsed(selection)
   const link = {
     type: 'link',
@@ -160,10 +152,11 @@ const wrapLink = (editor, url) => {
   }
 
   if (isCollapsed) {
-    Transforms.insertNodes(editor, link)
+    Transforms.insertNodes(editor, link, { at: selection })
   } else {
-    Transforms.wrapNodes(editor, link, { split: true })
-    Transforms.collapse(editor, { edge: 'end' })
+    Transforms.wrapNodes(editor, link, { split: true, at: selection })
+    // TODO: 怎么选中该链接？
+    // Transforms.collapse(editor, { edge: 'end' })
   }
 }
 
