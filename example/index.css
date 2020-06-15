@@ -6,7 +6,7 @@
 
 html {
   position: relative;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 body {
@@ -47,4 +47,9 @@ li {
 
 p {
   margin-bottom: 10px;
+}
+
+.ql-editor p {
+  font-size: 16px !important;
+  margin-bottom: 10px !important;
 }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { css, cx } from 'emotion'
 import Slator from '../src/slator'
 import { useClickAway } from '../src/utils'
+import QuillEditor from './QuillEditor'
 
 const App = () => {
   return (
@@ -14,7 +15,30 @@ const App = () => {
       `}
     >
       <Slator />
-      {/*<Button />*/}
+      <hr />
+      <QuillEditor
+        onChange={(value) => {
+          // console.log(value)
+        }}
+        imageUploadRequest={() => {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({
+                url:
+                  'https://www.bing.com/th?id=OHR.StStephens_ZH-CN9373191410_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
+              })
+            }, 5000)
+          })
+        }}
+      />
+      <hr />
+      <QuillEditor
+        theme="bubble"
+        onChange={(value) => {
+          // console.log(value)
+        }}
+        imageUploadRequest={() => Promise.resolve({ url: '' })}
+      />
     </div>
   )
 }

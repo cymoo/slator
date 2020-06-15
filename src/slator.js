@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
+import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
 import {
   Editable,
@@ -45,9 +46,9 @@ const Slator = () => {
         <MarkButton format="italic" icon="format-italic" />
         <MarkButton format="underline" icon="format-underlined" />
         <BlockButton format="code-block" icon="code" />
+        <BlockButton format="block-quote" icon="format-quote" />
         <BlockButton format="heading-one" icon="format-header1" />
         <BlockButton format="heading-two" icon="format-header2" />
-        <BlockButton format="block-quote" icon="format-quote" />
         <BlockButton format="numbered-list" icon="format-list-numbered" />
         <BlockButton format="bulleted-list" icon="format-list-bulleted" />
         <LinkButton />
