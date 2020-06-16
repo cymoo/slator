@@ -41,16 +41,16 @@ const Slator = () => {
 
   return (
     <Slate editor={editor} value={value} onChange={(value) => setValue(value)}>
-      <Toolbar>
-        <MarkButton format="bold" icon="format-bold" />
-        <MarkButton format="italic" icon="format-italic" />
-        <MarkButton format="underline" icon="format-underlined" />
-        <BlockButton format="code-block" icon="code" />
-        <BlockButton format="block-quote" icon="format-quote" />
-        <BlockButton format="heading-one" icon="format-header1" />
-        <BlockButton format="heading-two" icon="format-header2" />
-        <BlockButton format="numbered-list" icon="format-list-numbered" />
-        <BlockButton format="bulleted-list" icon="format-list-bulleted" />
+      <Toolbar style={{ display: 'flex', alignItems: 'center' }}>
+        <MarkButton format="bold" icon="bi-bold" />
+        <MarkButton format="italic" icon="bi-italic" />
+        <MarkButton format="underline" icon="bi-underline" />
+        <BlockButton format="code-block" icon="bi-embed2" />
+        <BlockButton format="block-quote" icon="bi-quotes-right" />
+        <BlockButton format="heading-one" icon="bi-header" />
+        {/* <BlockButton format="heading-two" icon="format-header2" />*/}
+        <BlockButton format="numbered-list" icon="bi-list-numbered" />
+        <BlockButton format="bulleted-list" icon="bi-list2" />
         <LinkButton />
         <ImageButton />
       </Toolbar>
@@ -194,32 +194,34 @@ const Leaf = ({ attributes, children, leaf }) => {
 
 const BlockButton = ({ format, icon }) => {
   const editor = useSlate()
+  const isActive = isBlockActive(editor, format)
   return (
     <Button
       title={format}
-      active={isBlockActive(editor, format)}
+      active={isActive}
       onMouseDown={(event) => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
     >
       {/* <Icon>{icon}</Icon>*/}
-      <Icon type={icon} />
+      <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
     </Button>
   )
 }
 
 const MarkButton = ({ format, icon }) => {
   const editor = useSlate()
+  const isActive = isMarkActive(editor, format)
   return (
     <Button
-      active={isMarkActive(editor, format)}
+      active={isActive}
       onMouseDown={(event) => {
         event.preventDefault()
         toggleMark(editor, format)
       }}
     >
-      <Icon type={icon} />
+      <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
     </Button>
   )
 }

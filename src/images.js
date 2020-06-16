@@ -64,7 +64,7 @@ export const ImageButton = () => {
         ref.current.click()
       }}
     >
-      <Icon type="image" />
+      <Icon type="bi-image" />
       <input
         type="file"
         ref={ref}

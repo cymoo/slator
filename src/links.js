@@ -52,7 +52,7 @@ export const LinkButton1 = () => {
         }
       }}
     >
-      <Icon type="link" />
+      <Icon type="bi-link" />
     </Button>
   )
 }
@@ -106,7 +106,7 @@ export const LinkButton = () => {
         setShow((show) => !show)
       }}
     >
-      <Icon type="link" />
+      <Icon type="bi-link" />
       {show && (
         <TooltipInput
           top={position[0]}

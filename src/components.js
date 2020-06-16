@@ -1,34 +1,35 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { cx, css } from 'emotion'
-import MDIcon from '@mdi/react'
-import {
-  mdiFormatBold,
-  mdiFormatItalic,
-  mdiFormatUnderline,
-  mdiCodeBraces,
-  mdiFormatHeader1,
-  mdiFormatHeader2,
-  mdiFormatQuoteOpen,
-  mdiFormatListNumbered,
-  mdiFormatListBulleted,
-  mdiImage,
-  mdiLink,
-} from '@mdi/js'
+import icons from './icons.svg'
+// import MDIcon from '@mdi/react'
+// import {
+//   mdiFormatBold,
+//   mdiFormatItalic,
+//   mdiFormatUnderline,
+//   mdiCodeBraces,
+//   mdiFormatHeader1,
+//   mdiFormatHeader2,
+//   mdiFormatQuoteOpen,
+//   mdiFormatListNumbered,
+//   mdiFormatListBulleted,
+//   mdiImage,
+//   mdiLink,
+// } from '@mdi/js'
 
-const icons = {
-  'format-bold': mdiFormatBold,
-  'format-italic': mdiFormatItalic,
-  'format-underlined': mdiFormatUnderline,
-  code: mdiCodeBraces,
-  'format-header1': mdiFormatHeader1,
-  'format-header2': mdiFormatHeader2,
-  'format-quote': mdiFormatQuoteOpen,
-  'format-list-numbered': mdiFormatListNumbered,
-  'format-list-bulleted': mdiFormatListBulleted,
-  image: mdiImage,
-  link: mdiLink,
-}
+// const icons = {
+//   'format-bold': mdiFormatBold,
+//   'format-italic': mdiFormatItalic,
+//   'format-underlined': mdiFormatUnderline,
+//   code: mdiCodeBraces,
+//   'format-header1': mdiFormatHeader1,
+//   'format-header2': mdiFormatHeader2,
+//   'format-quote': mdiFormatQuoteOpen,
+//   'format-list-numbered': mdiFormatListNumbered,
+//   'format-list-bulleted': mdiFormatListBulleted,
+//   image: mdiImage,
+//   link: mdiLink,
+// }
 
 export const Button = React.forwardRef(
   ({ className, active, reversed, ...props }, ref) => (
@@ -46,7 +47,7 @@ export const Button = React.forwardRef(
               : '#aaa'
             : active
             ? '#333'
-            : '#999'};
+            : '#6a6f7b'};
           transition: all 0.2s ease-in;
         `
       )}
@@ -116,22 +117,24 @@ export const EditorValue = React.forwardRef(
 // ))
 
 export const Icon = React.forwardRef((props, ref) => {
-  const { className, type, size, color, ...rest } = props
-  const path = icons[type]
+  let { className, type, height, width, color, ...rest } = props
+
+  if (type === 'bi-embed2') {
+    height = 18
+    width = 18
+  }
 
   return (
-    <MDIcon
-      className={cx(className)}
-      path={path}
-      size={size}
-      // color={color}
-      {...rest}
-    />
+    <svg width={width} height={height} fill={color} {...rest}>
+      <use xlinkHref={`${icons}#${type}`} />
+    </svg>
   )
 })
 
 Icon.defaultProps = {
-  size: 0.9,
+  height: 16,
+  width: 16,
+  color: '#6a6f7b',
 }
 
 export const Instruction = React.forwardRef(({ className, ...props }, ref) => (
@@ -163,7 +166,7 @@ export const Menu = React.forwardRef(({ className, ...props }, ref) => (
         }
 
         & > * + * {
-          margin-left: 15px;
+          margin-left: 20px;
         }
       `
     )}
