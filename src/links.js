@@ -7,6 +7,7 @@ import { Button, Icon } from './components'
 import { css, cx } from 'emotion'
 import { useClickAway } from './utils'
 
+// TODO: 双击某一个段落时，也会选中下一个段落的开头，这是BUG?
 export const withLinks = (editor) => {
   const { insertData, insertText, isInline } = editor
 
@@ -123,6 +124,41 @@ export const LinkButton = () => {
   )
 }
 
+export const LinkElement = ({ attributes, children, element }) => {
+  const [show, setShow] = useState(false)
+  const ref = useClickAway(
+    useCallback(() => {
+      show && setShow(false)
+    }, [show])
+  )
+
+  return (
+    <a
+      {...attributes}
+      href={element.url}
+      ref={ref}
+      onClick={() => {
+        setShow(true)
+      }}
+      style={{ display: 'inline-block' }}
+    >
+      {show && (
+        <Tooltip width="auto">
+          <a
+            href={element.url}
+            contentEditable={false}
+            target="_blank"
+            style={{ color: 'white' }}
+          >
+            {element.url}
+          </a>
+        </Tooltip>
+      )}
+      {children}
+    </a>
+  )
+}
+
 const insertLink = (editor, url, selection) => {
   if (selection) {
     wrapLink(editor, url, selection)
@@ -172,18 +208,18 @@ const Tooltip = (props) => {
     top,
     ...rest
   } = props
-  let style
-  if (arrow === 'top') {
-    style = css`
-      border-bottom: 6px solid #444;
-      top: -6px;
-    `
-  } else {
-    style = css`
-      border-top: 6px solid #444;
-      top: -6px;
-    `
-  }
+  // let style
+  // if (arrow === 'top') {
+  //   style = css`
+  //     border-bottom: 6px solid #444;
+  //     top: -6px;
+  //   `
+  // } else {
+  //   style = css`
+  //     border-top: 6px solid #444;
+  //     top: -6px;
+  //   `
+  // }
 
   return (
     <div
@@ -211,8 +247,9 @@ const Tooltip = (props) => {
     >
       <span
         className={cx(
-          style,
           css`
+            border-bottom: 6px solid #444;
+            top: -6px;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
             content: ' ';

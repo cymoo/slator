@@ -16,6 +16,7 @@ import { Button, Icon, Toolbar } from './components'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 import { withLinks, LinkButton } from './links'
 import { withImages, ImageButton } from './images'
+import { LinkElement } from './links'
 import { css } from 'emotion'
 
 const HOTKEYS = {
@@ -40,7 +41,14 @@ const Slator = () => {
   )
 
   return (
-    <Slate editor={editor} value={value} onChange={(value) => setValue(value)}>
+    <Slate
+      editor={editor}
+      value={value}
+      onChange={(value) => {
+        // console.log(editor.selection)
+        setValue(value)
+      }}
+    >
       <Toolbar style={{ display: 'flex', alignItems: 'center' }}>
         <MarkButton format="bold" icon="bi-bold" />
         <MarkButton format="italic" icon="bi-italic" />
@@ -120,7 +128,8 @@ const isMarkActive = (editor, format) => {
   return marks ? marks[format] === true : false
 }
 
-const Element = ({ attributes, children, element }) => {
+const Element = (props) => {
+  const { attributes, children, element } = props
   const selected = useSelected()
   const focused = useFocused()
 
@@ -142,17 +151,14 @@ const Element = ({ attributes, children, element }) => {
                   ? '0 0 0 3px #B4D5FF'
                   : 'none'};
               `}
+              alt="TODO..."
             />
           </div>
           {children}
         </div>
       )
     case 'link':
-      return (
-        <a {...attributes} href={element.url}>
-          {children}
-        </a>
-      )
+      return <LinkElement {...props} />
     case 'code-block':
       return <CodeBlock attributes={attributes}>{children}</CodeBlock>
     case 'block-quote':

@@ -37,11 +37,12 @@ export const toggleCodeBlock = (editor) => {
   }
 
   if (match) {
-    const codeText = Array.from(
+    const nodes = Array.from(
       Editor.nodes(editor, {
         match: (node) => Editor.isBlock(editor, node),
       })
     )
+    const codeText = nodes
       .map((entry) => Editor.string(editor, entry[1]))
       .join('\n')
 
@@ -49,6 +50,11 @@ export const toggleCodeBlock = (editor) => {
       .split('\n')
       .filter((line) => line.length > 0)
       .map((line) => ({ type: 'paragraph', children: [{ text: line }] }))
+
+    if (paragraphs.length === 1) {
+      Transforms.setNodes(editor, { type: 'paragraph' })
+      return
+    }
 
     Transforms.removeNodes(editor)
     paragraphs.forEach((node) => editor.insertNode(node))
