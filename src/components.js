@@ -119,7 +119,7 @@ export const EditorValue = React.forwardRef(
 export const Icon = React.forwardRef((props, ref) => {
   let { className, type, height, width, color, ...rest } = props
 
-  if (type === 'bi-embed2') {
+  if (type === 'code-slash') {
     height = 18
     width = 18
   }

@@ -17,6 +17,7 @@ import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 import { withLinks, LinkButton } from './links'
 import { withImages, ImageButton } from './images'
 import { LinkElement } from './links'
+import { ColorButton } from './color'
 import { css } from 'emotion'
 
 const HOTKEYS = {
@@ -50,17 +51,38 @@ const Slator = () => {
       }}
     >
       <Toolbar style={{ display: 'flex', alignItems: 'center' }}>
-        <MarkButton format="bold" icon="bi-bold" />
-        <MarkButton format="italic" icon="bi-italic" />
-        <MarkButton format="underline" icon="bi-underline" />
-        <BlockButton format="code-block" icon="bi-embed2" />
-        <BlockButton format="block-quote" icon="bi-quotes-right" />
-        <BlockButton format="heading-one" icon="bi-header" />
+        <MarkButton format="bold" icon="bold" />
+        <MarkButton format="italic" icon="italic" />
+        <MarkButton format="underline" icon="underline" />
+        <MarkButton format="strikethrough" icon="strikethrough" />
+        <BlockButton format="code-block" icon="code-slash" />
+        <BlockButton format="block-quote" icon="quotes-right" />
+        <BlockButton format="heading-one" icon="header" />
         {/* <BlockButton format="heading-two" icon="format-header2" />*/}
-        <BlockButton format="numbered-list" icon="bi-list-numbered" />
-        <BlockButton format="bulleted-list" icon="bi-list2" />
+        <BlockButton format="numbered-list" icon="list-numbered" />
+        <BlockButton format="bulleted-list" icon="list-bulleted" />
         <LinkButton />
         <ImageButton />
+
+        {/* <MarkButton format="underline" icon="font-size" />*/}
+
+        {/* <MarkButton format="underline" icon="color-text" />*/}
+        <ColorButton format="color" />
+        <ColorButton format="background" />
+        {/* <MarkButton format="underline" icon="color-fill" />*/}
+
+        <MarkButton format="underline" icon="paragraph-left" />
+        <MarkButton format="underline" icon="paragraph-right" />
+        <MarkButton format="underline" icon="paragraph-justify" />
+        <MarkButton format="underline" icon="paragraph-center" />
+
+        <MarkButton format="underline" icon="indent-increase" />
+        <MarkButton format="underline" icon="indent-decrease" />
+
+        <MarkButton format="sup" icon="superscript" />
+        <MarkButton format="sub" icon="subscript" />
+
+        <MarkButton format="underline" icon="film" />
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -179,8 +201,29 @@ const Element = (props) => {
 }
 
 const Leaf = ({ attributes, children, leaf }) => {
+  if (leaf.color || leaf.background) {
+    children = (
+      <span
+        style={{
+          color: leaf.color || 'inherit',
+          backgroundColor: leaf.background || 'inherit',
+        }}
+      >
+        {children}
+      </span>
+    )
+  }
+
   if (leaf.bold) {
     children = <strong>{children}</strong>
+  }
+
+  if (leaf.sup) {
+    children = <sup>{children}</sup>
+  }
+
+  if (leaf.sub) {
+    children = <sub>{children}</sub>
   }
 
   if (leaf.code) {
@@ -193,6 +236,10 @@ const Leaf = ({ attributes, children, leaf }) => {
 
   if (leaf.underline) {
     children = <u>{children}</u>
+  }
+
+  if (leaf.strikethrough) {
+    children = <s>{children}</s>
   }
 
   return <span {...attributes}>{children}</span>

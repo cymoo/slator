@@ -107,7 +107,7 @@ export const LinkButton = () => {
         setShow((show) => !show)
       }}
     >
-      <Icon type="bi-link" />
+      <Icon type="link" />
       {show && (
         <TooltipInput
           top={position[0]}
@@ -137,21 +137,27 @@ export const LinkElement = ({ attributes, children, element }) => {
       {...attributes}
       href={element.url}
       ref={ref}
-      onClick={() => {
+      onClick={(event) => {
+        event.preventDefault()
         setShow(true)
       }}
       style={{ display: 'inline-block' }}
     >
       {show && (
-        <Tooltip width="auto">
-          <a
-            href={element.url}
-            contentEditable={false}
-            target="_blank"
-            style={{ color: 'white' }}
+        <Tooltip width="auto" contentEditable={false}>
+          <span
+            data-href={element.url}
+            style={{
+              color: 'white',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+            }}
+            onClick={(event) => {
+              event.preventDefault()
+            }}
           >
             {element.url}
-          </a>
+          </span>
         </Tooltip>
       )}
       {children}
