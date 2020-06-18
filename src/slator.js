@@ -66,23 +66,21 @@ const Slator = () => {
 
         {/* <MarkButton format="underline" icon="font-size" />*/}
 
-        {/* <MarkButton format="underline" icon="color-text" />*/}
         <ColorButton format="color" />
         <ColorButton format="background" />
-        {/* <MarkButton format="underline" icon="color-fill" />*/}
 
-        <MarkButton format="underline" icon="paragraph-left" />
-        <MarkButton format="underline" icon="paragraph-right" />
-        <MarkButton format="underline" icon="paragraph-justify" />
-        <MarkButton format="underline" icon="paragraph-center" />
+        <AlignButton format="left" icon="paragraph-left" />
+        <AlignButton format="right" icon="paragraph-right" />
+        <AlignButton format="justify" icon="paragraph-justify" />
+        <AlignButton format="center" icon="paragraph-center" />
 
-        <MarkButton format="underline" icon="indent-increase" />
-        <MarkButton format="underline" icon="indent-decrease" />
+        <IndentButton format="indent" icon="indent-increase" />
+        <IndentButton format="unindent" icon="indent-decrease" />
 
         <MarkButton format="sup" icon="superscript" />
         <MarkButton format="sub" icon="subscript" />
 
-        <MarkButton format="underline" icon="film" />
+        {/* <MarkButton format="underline" icon="film" />*/}
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -99,6 +97,7 @@ const Slator = () => {
             }
           }
         }}
+        style={{ minHeight: 300 }}
       />
     </Slate>
   )
@@ -155,6 +154,15 @@ const Element = (props) => {
   const selected = useSelected()
   const focused = useFocused()
 
+  const { align, indent } = element
+  const style = {}
+  if (align) {
+    style.textAlign = align
+  }
+  if (indent) {
+    style.textIndent = `${indent}em`
+  }
+
   switch (element.type) {
     case 'image':
       return (
@@ -182,21 +190,45 @@ const Element = (props) => {
     case 'link':
       return <LinkElement {...props} />
     case 'code-block':
-      return <CodeBlock attributes={attributes}>{children}</CodeBlock>
+      return (
+        <CodeBlock attributes={attributes} style={style}>
+          {children}
+        </CodeBlock>
+      )
     case 'block-quote':
-      return <blockquote {...attributes}>{children}</blockquote>
+      return (
+        <blockquote {...attributes} style={style}>
+          {children}
+        </blockquote>
+      )
+    case 'heading-one':
+      return (
+        <h1 {...attributes} style={style}>
+          {children}
+        </h1>
+      )
+    case 'heading-two':
+      return (
+        <h2 {...attributes} style={style}>
+          {children}
+        </h2>
+      )
     case 'bulleted-list':
       return <ul {...attributes}>{children}</ul>
-    case 'heading-one':
-      return <h1 {...attributes}>{children}</h1>
-    case 'heading-two':
-      return <h2 {...attributes}>{children}</h2>
-    case 'list-item':
-      return <li {...attributes}>{children}</li>
     case 'numbered-list':
       return <ol {...attributes}>{children}</ol>
+    case 'list-item':
+      return (
+        <li {...attributes} style={style}>
+          {children}
+        </li>
+      )
     default:
-      return <p {...attributes}>{children}</p>
+      return (
+        <p {...attributes} style={style}>
+          {children}
+        </p>
+      )
   }
 }
 
@@ -275,6 +307,70 @@ const MarkButton = ({ format, icon }) => {
       }}
     >
       <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
+    </Button>
+  )
+}
+
+const toggleAlign = (editor, format) => {
+  const isActive = isAlignActive(editor, format)
+  Transforms.setNodes(
+    editor,
+    { align: isActive ? null : format },
+    { match: (node) => Editor.isBlock(editor, node) }
+  )
+}
+
+const isAlignActive = (editor, format) => {
+  const [match] = Editor.nodes(editor, {
+    match: (n) => n.align === format && Editor.isBlock(editor, n),
+  })
+
+  return !!match
+}
+
+const AlignButton = ({ format, icon }) => {
+  const editor = useSlate()
+  const isActive = isAlignActive(editor, format)
+  return (
+    <Button
+      active={isActive}
+      onMouseDown={(event) => {
+        event.preventDefault()
+        toggleAlign(editor, format)
+      }}
+    >
+      <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
+    </Button>
+  )
+}
+
+const indentBlock = (editor, format) => {
+  for (const [node, path] of Editor.nodes(editor, {
+    match: (node) => Editor.isBlock(editor, node),
+  })) {
+    let indent = node.indent || 0
+    if (format === 'indent') {
+      ++indent
+    } else if (format === 'unindent') {
+      indent = Math.max(--indent, 0)
+    } else {
+      // impossible
+      throw new Error(`wrong indent type: ${format}`)
+    }
+    Transforms.setNodes(editor, { indent }, { at: path })
+  }
+}
+
+const IndentButton = ({ format, icon }) => {
+  const editor = useSlate()
+  return (
+    <Button
+      onMouseDown={(event) => {
+        event.preventDefault()
+        indentBlock(editor, format)
+      }}
+    >
+      <Icon type={icon} />
     </Button>
   )
 }

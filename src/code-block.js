@@ -71,7 +71,7 @@ export const toggleCodeBlock = (editor) => {
   }
 }
 
-export const CodeBlock = ({ attributes, children }) => {
+export const CodeBlock = ({ attributes, children, ...rest }) => {
   return (
     <pre
       {...attributes}
@@ -81,6 +81,7 @@ export const CodeBlock = ({ attributes, children }) => {
         background-color: #f1f1f1;
         line-height: 1.3;
       `}
+      {...rest}
     >
       <code>{children}</code>
     </pre>
