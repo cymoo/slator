@@ -1,18 +1,21 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
 import {
   Editable,
   withReact,
+  ReactEditor,
   useSlate,
   Slate,
   useSelected,
   useFocused,
 } from 'slate-react'
-import { Editor, Transforms, createEditor } from 'slate'
+import { Editor, Transforms, createEditor, Range } from 'slate'
 import { withHistory } from 'slate-history'
 
-import { Button, Icon, Toolbar } from './components'
+import { Button, Icon, Toolbar, Tooltip, TooltipInput } from './components'
+import { withMDShortcuts } from './md-shortcuts'
+import { withPasteHtml } from './paste-html'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 import { withLinks, LinkButton } from './links'
 import { withImages, ImageButton } from './images'
@@ -36,10 +39,22 @@ const Slator = () => {
   const editor = useMemo(
     () =>
       withHistory(
-        withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+        withPasteHtml(
+          withMDShortcuts(
+            withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+          )
+        )
       ),
     []
   )
+
+  const [showLinkPreview, setShowLinkPreview] = useState(false)
+  const [linkPreviewPosition, setLinkPreviewPosition] = useState([
+    -10000,
+    -10000,
+  ])
+  const [linkPreviewURL, setLinkPreviewURL] = useState('')
+  const linkPreviewTooltip = useRef()
 
   return (
     <Slate
@@ -55,10 +70,15 @@ const Slator = () => {
         <MarkButton format="italic" icon="italic" />
         <MarkButton format="underline" icon="underline" />
         <MarkButton format="strikethrough" icon="strikethrough" />
+        <ColorButton format="color" />
         <BlockButton format="code-block" icon="code-slash" />
         <BlockButton format="block-quote" icon="quotes-right" />
         <BlockButton format="heading-one" icon="header" />
-        {/* <BlockButton format="heading-two" icon="format-header2" />*/}
+
+        {/* <BlockButton format="heading-one" icon="header1" />*/}
+        {/* <BlockButton format="heading-two" icon="header2" />*/}
+        {/* <BlockButton format="heading-three" icon="header3" />*/}
+
         <BlockButton format="numbered-list" icon="list-numbered" />
         <BlockButton format="bulleted-list" icon="list-bulleted" />
         <LinkButton />
@@ -66,7 +86,6 @@ const Slator = () => {
 
         {/* <MarkButton format="underline" icon="font-size" />*/}
 
-        <ColorButton format="color" />
         <ColorButton format="background" />
 
         <AlignButton format="left" icon="paragraph-left" />
@@ -97,8 +116,57 @@ const Slator = () => {
             }
           }
         }}
+        // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
+        onMouseUp={() => {
+          const selection = editor.selection
+          if (selection && Range.isCollapsed(selection)) {
+            const [match] = Editor.nodes(editor, {
+              match: (node) => node.type === 'link',
+            })
+            if (match) {
+              const range = Editor.range(editor, match[1])
+              const domRange = ReactEditor.toDOMRange(editor, range)
+              const rect = domRange.getBoundingClientRect()
+              const top = rect.top + window.pageYOffset - 13
+              const left = rect.left + window.pageXOffset - rect.width / 2
+
+              setShowLinkPreview(true)
+              setLinkPreviewURL(match[0].url)
+              setLinkPreviewPosition([top, left])
+            } else {
+              setShowLinkPreview(false)
+              setLinkPreviewURL('')
+              setLinkPreviewPosition([-10000, -10000])
+            }
+          }
+        }}
         style={{ minHeight: 300 }}
       />
+      {showLinkPreview && (
+        <Tooltip
+          width="auto"
+          ref={linkPreviewTooltip}
+          className="tooltip"
+          style={{
+            top: linkPreviewPosition[0],
+            left: linkPreviewPosition[1],
+          }}
+        >
+          <a
+            href={linkPreviewURL}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: 14,
+              color: 'white',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+            }}
+          >
+            {linkPreviewURL}
+          </a>
+        </Tooltip>
+      )}
     </Slate>
   )
 }
@@ -151,6 +219,7 @@ const isMarkActive = (editor, format) => {
 
 const Element = (props) => {
   const { attributes, children, element } = props
+  // TODO: selected VS focused, what's the difference?
   const selected = useSelected()
   const focused = useFocused()
 
@@ -213,6 +282,12 @@ const Element = (props) => {
           {children}
         </h2>
       )
+    case 'heading-three':
+      return (
+        <h3 {...attributes} style={style}>
+          {children}
+        </h3>
+      )
     case 'bulleted-list':
       return <ul {...attributes}>{children}</ul>
     case 'numbered-list':
@@ -250,6 +325,18 @@ const Leaf = ({ attributes, children, leaf }) => {
     children = <strong>{children}</strong>
   }
 
+  if (leaf.italic) {
+    children = <em>{children}</em>
+  }
+
+  if (leaf.underline) {
+    children = <u>{children}</u>
+  }
+
+  if (leaf.strikethrough) {
+    children = <del>{children}</del>
+  }
+
   if (leaf.sup) {
     children = <sup>{children}</sup>
   }
@@ -260,18 +347,6 @@ const Leaf = ({ attributes, children, leaf }) => {
 
   if (leaf.code) {
     children = <code>{children}</code>
-  }
-
-  if (leaf.italic) {
-    children = <em>{children}</em>
-  }
-
-  if (leaf.underline) {
-    children = <u>{children}</u>
-  }
-
-  if (leaf.strikethrough) {
-    children = <s>{children}</s>
   }
 
   return <span {...attributes}>{children}</span>
@@ -381,7 +456,8 @@ const initialValue = [
     children: [
       { text: 'This is editable ' },
       { text: 'rich', bold: true },
-      { text: ' text, ' },
+      // { text: ' text, ' },
+      { type: 'link', url: 'http://bing.com', children: [{ text: ' text, ' }] },
       { text: 'much', italic: true },
       { text: ' better than a ' },
       { text: '<textarea>', code: true },
@@ -407,8 +483,8 @@ const initialValue = [
     children: [{ text: 'A wise quote.' }],
   },
   {
-    type: 'paragraph',
-    children: [{ text: 'Try it out for yourself!' }],
+    type: 'code-block',
+    children: [{ text: 'def foo():\n    print("hello world")\n' }],
   },
 ]
 

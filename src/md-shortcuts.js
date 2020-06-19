@@ -1,50 +1,28 @@
-import React, { useState, useCallback, useMemo } from 'react'
-import { Slate, Editable, withReact } from 'slate-react'
-import { Editor, Transforms, Range, Point, createEditor } from 'slate'
-import { withHistory } from 'slate-history'
+import React from 'react'
+import { Editor, Transforms, Range, Point } from 'slate'
 
 const SHORTCUTS = {
-  '*': 'list-item',
-  '-': 'list-item',
-  '+': 'list-item',
-  '>': 'block-quote',
   '#': 'heading-one',
   '##': 'heading-two',
   '###': 'heading-three',
-  '####': 'heading-four',
-  '#####': 'heading-five',
-  '######': 'heading-six',
+  '*': 'list-item',
+  '-': 'list-item',
+  '1.': 'list-item',
+  // '+': 'list-item',
+  '>': 'block-quote',
+  '``': 'code-block',
 }
 
-const MarkdownShortcutsExample = () => {
-  const [value, setValue] = useState(initialValue)
-  const renderElement = useCallback(props => <Element {...props} />, [])
-  const editor = useMemo(
-    () => withShortcuts(withReact(withHistory(createEditor()))),
-    []
-  )
-  return (
-    <Slate editor={editor} value={value} onChange={value => setValue(value)}>
-      <Editable
-        renderElement={renderElement}
-        placeholder="Write some markdown..."
-        spellCheck
-        autoFocus
-      />
-    </Slate>
-  )
-}
-
-const withShortcuts = editor => {
+export const withMDShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor
 
-  editor.insertText = text => {
+  editor.insertText = (text) => {
     const { selection } = editor
 
     if (text === ' ' && selection && Range.isCollapsed(selection)) {
       const { anchor } = selection
       const block = Editor.above(editor, {
-        match: n => Editor.isBlock(editor, n),
+        match: (n) => Editor.isBlock(editor, n),
       })
       const path = block ? block[1] : []
       const start = Editor.start(editor, path)
@@ -58,13 +36,17 @@ const withShortcuts = editor => {
         Transforms.setNodes(
           editor,
           { type },
-          { match: n => Editor.isBlock(editor, n) }
+          { match: (n) => Editor.isBlock(editor, n) }
         )
 
+        // TODO: 多重再回退时嵌套会有bug
         if (type === 'list-item') {
-          const list = { type: 'bulleted-list', children: [] }
+          const list = {
+            type: beforeText === '1.' ? 'numbered-list' : 'bulleted-list',
+            children: [],
+          }
           Transforms.wrapNodes(editor, list, {
-            match: n => n.type === 'list-item',
+            match: (n) => n.type === 'list-item',
           })
         }
 
@@ -75,12 +57,13 @@ const withShortcuts = editor => {
     insertText(text)
   }
 
+  // FIXME: 删除多重嵌套的元素时（当黏贴HTML时才会出现），需要做额外的处理
   editor.deleteBackward = (...args) => {
     const { selection } = editor
 
     if (selection && Range.isCollapsed(selection)) {
       const match = Editor.above(editor, {
-        match: n => Editor.isBlock(editor, n),
+        match: (n) => Editor.isBlock(editor, n),
       })
 
       if (match) {
@@ -95,7 +78,8 @@ const withShortcuts = editor => {
 
           if (block.type === 'list-item') {
             Transforms.unwrapNodes(editor, {
-              match: n => n.type === 'bulleted-list',
+              match: (n) =>
+                n.type === 'bulleted-list' || n.type === 'numbered-list',
               split: true,
             })
           }
@@ -110,68 +94,3 @@ const withShortcuts = editor => {
 
   return editor
 }
-
-const Element = ({ attributes, children, element }) => {
-  switch (element.type) {
-    case 'block-quote':
-      return <blockquote {...attributes}>{children}</blockquote>
-    case 'bulleted-list':
-      return <ul {...attributes}>{children}</ul>
-    case 'heading-one':
-      return <h1 {...attributes}>{children}</h1>
-    case 'heading-two':
-      return <h2 {...attributes}>{children}</h2>
-    case 'heading-three':
-      return <h3 {...attributes}>{children}</h3>
-    case 'heading-four':
-      return <h4 {...attributes}>{children}</h4>
-    case 'heading-five':
-      return <h5 {...attributes}>{children}</h5>
-    case 'heading-six':
-      return <h6 {...attributes}>{children}</h6>
-    case 'list-item':
-      return <li {...attributes}>{children}</li>
-    default:
-      return <p {...attributes}>{children}</p>
-  }
-}
-
-const initialValue = [
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          'The editor gives you full control over the logic you can add. For example, it\'s fairly common to want to add markdown-like shortcuts to editors. So that, when you start a line with "> " you get a blockquote that looks like this:',
-      },
-    ],
-  },
-  {
-    type: 'block-quote',
-    children: [{ text: 'A wise quote.' }],
-  },
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          'Order when you start a line with "## " you get a level-two heading, like this:',
-      },
-    ],
-  },
-  {
-    type: 'heading-two',
-    children: [{ text: 'Try it out!' }],
-  },
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          'Try it out for yourself! Try starting a new line with ">", "-", or "#"s.',
-      },
-    ],
-  },
-]
-
-export default MarkdownShortcutsExample

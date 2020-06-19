@@ -6,6 +6,7 @@ import { Transforms, Editor, Range } from 'slate'
 import { Button, Icon } from './components'
 import { css, cx } from 'emotion'
 import { useClickAway } from './utils'
+import { TooltipInput } from './components'
 
 // TODO: 双击某一个段落时，也会选中下一个段落的开头，这是BUG?
 export const withLinks = (editor) => {
@@ -125,41 +126,41 @@ export const LinkButton = () => {
 }
 
 export const LinkElement = ({ attributes, children, element }) => {
-  const [show, setShow] = useState(false)
-  const ref = useClickAway(
-    useCallback(() => {
-      show && setShow(false)
-    }, [show])
-  )
+  // const [show, setShow] = useState(false)
+  // const ref = useClickAway(
+  //   useCallback(() => {
+  //     show && setShow(false)
+  //   }, [show])
+  // )
 
   return (
     <a
       {...attributes}
       href={element.url}
-      ref={ref}
-      onClick={(event) => {
-        event.preventDefault()
-        setShow(true)
-      }}
-      style={{ display: 'inline-block' }}
+      // ref={ref}
+      // onClick={(event) => {
+      //   event.preventDefault()
+      //   setShow(true)
+      // }}
+      // style={{ display: 'inline-block' }}
     >
-      {show && (
-        <Tooltip width="auto" contentEditable={false}>
-          <span
-            data-href={element.url}
-            style={{
-              color: 'white',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-            onClick={(event) => {
-              event.preventDefault()
-            }}
-          >
-            {element.url}
-          </span>
-        </Tooltip>
-      )}
+      {/* {show && (*/}
+      {/*  <Tooltip width="auto" contentEditable={false}>*/}
+      {/*    <span*/}
+      {/*      data-href={element.url}*/}
+      {/*      style={{*/}
+      {/*        color: 'white',*/}
+      {/*        cursor: 'pointer',*/}
+      {/*        textDecoration: 'underline',*/}
+      {/*      }}*/}
+      {/*      onClick={(event) => {*/}
+      {/*        event.preventDefault()*/}
+      {/*      }}*/}
+      {/*    >*/}
+      {/*      {element.url}*/}
+      {/*    </span>*/}
+      {/*  </Tooltip>*/}
+      {/* )}*/}
       {children}
     </a>
   )
@@ -200,119 +201,4 @@ const wrapLink = (editor, url, selection) => {
     // TODO: 怎么选中该链接？
     // Transforms.collapse(editor, { edge: 'end' })
   }
-}
-
-// TEST
-const Tooltip = (props) => {
-  const {
-    width,
-    height,
-    arrow,
-    children,
-    className,
-    left,
-    top,
-    ...rest
-  } = props
-  // let style
-  // if (arrow === 'top') {
-  //   style = css`
-  //     border-bottom: 6px solid #444;
-  //     top: -6px;
-  //   `
-  // } else {
-  //   style = css`
-  //     border-top: 6px solid #444;
-  //     top: -6px;
-  //   `
-  // }
-
-  return (
-    <div
-      className={cx(
-        className,
-        css`
-          position: absolute;
-          display: flex;
-          align-items: center;
-          padding: 8px 12px;
-          transform: translateY(10px);
-          left: ${left}px;
-          top: ${top}px;
-          width: ${width}px;
-          height: ${height}px;
-          background-color: #444;
-          border-radius: 25px;
-          color: #fff;
-        `
-      )}
-      onClick={(event) => {
-        event.stopPropagation()
-      }}
-      {...rest}
-    >
-      <span
-        className={cx(
-          css`
-            border-bottom: 6px solid #444;
-            top: -6px;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            content: ' ';
-            display: block;
-            left: 50%;
-            margin-left: -6px;
-            position: absolute;
-          `
-        )}
-      />
-      {children}
-    </div>
-  )
-}
-
-Tooltip.defaultProps = {
-  width: 204,
-  height: 40,
-  arrow: 'top',
-}
-
-const TooltipInput = (props) => {
-  const [value, setValue] = useState('')
-  const { placeholder, onEnter, ...rest } = props
-  const ref = useRef()
-
-  useEffect(() => {
-    ref.current.focus()
-  })
-
-  return (
-    <Tooltip {...rest}>
-      <input
-        ref={ref}
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault()
-            onEnter(value)
-          }
-        }}
-        type="text"
-        placeholder={placeholder}
-        className={css`
-          width: 100%;
-          font-size: 13px;
-          border: none;
-          background: transparent;
-          outline: none;
-          color: #fff;
-        `}
-      />
-    </Tooltip>
-  )
-}
-
-TooltipInput.defaultProps = {
-  placeholder: '链接地址',
 }

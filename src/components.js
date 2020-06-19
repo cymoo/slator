@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { cx, css } from 'emotion'
 import icons from './icons.svg'
+import './index.css'
 // import MDIcon from '@mdi/react'
 // import {
 //   mdiFormatBold,
@@ -182,14 +183,133 @@ export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
     {...props}
     ref={ref}
     className={cx(
+      'shadow-v3',
       className,
       css`
         position: relative;
         padding: 1px 18px 17px;
         margin: 0 -20px;
-        border-bottom: 2px solid #eee;
+        // border-bottom: 2px solid #eee;
         margin-bottom: 20px;
       `
     )}
   />
 ))
+
+// TEST
+export const Tooltip = React.forwardRef((props, ref) => {
+  const {
+    width,
+    height,
+    arrow,
+    children,
+    className,
+    left,
+    top,
+    ...rest
+  } = props
+  // let style
+  // if (arrow === 'top') {
+  //   style = css`
+  //     border-bottom: 6px solid #444;
+  //     top: -6px;
+  //   `
+  // } else {
+  //   style = css`
+  //     border-top: 6px solid #444;
+  //     top: -6px;
+  //   `
+  // }
+
+  return (
+    <div
+      ref={ref}
+      className={cx(
+        className,
+        css`
+          position: absolute;
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          transform: translateY(10px);
+          left: ${left}px;
+          top: ${top}px;
+          width: ${typeof width === 'string' ? width : `${width}px`};
+          height: ${height}px;
+          background-color: #444;
+          border-radius: 25px;
+          color: #fff;
+        `
+      )}
+      onClick={(event) => {
+        event.stopPropagation()
+      }}
+      {...rest}
+    >
+      <span
+        className={cx(
+          css`
+            border-bottom: 6px solid #444;
+            top: -6px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            content: ' ';
+            display: block;
+            left: 50%;
+            margin-left: -6px;
+            position: absolute;
+          `
+        )}
+      />
+      {children}
+    </div>
+  )
+})
+
+Tooltip.defaultProps = {
+  width: 204,
+  height: 40,
+  left: -10000,
+  top: -10000,
+  arrow: 'top',
+}
+
+export const TooltipInput = (props) => {
+  const [value, setValue] = useState('')
+  const { placeholder, onEnter, ...rest } = props
+  const ref = useRef()
+
+  useEffect(() => {
+    ref.current.focus()
+  })
+
+  return (
+    <Tooltip {...rest}>
+      <input
+        ref={ref}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            onEnter(value)
+          }
+        }}
+        type="text"
+        placeholder={placeholder}
+        className={css`
+          width: 100%;
+          font-size: 13px;
+          border: none;
+          background: transparent;
+          outline: none;
+          color: #fff;
+        `}
+      />
+    </Tooltip>
+  )
+}
+
+TooltipInput.defaultProps = {
+  placeholder: '链接地址',
+}
