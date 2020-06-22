@@ -65,15 +65,29 @@ const Slator = () => {
         setValue(value)
       }}
     >
-      <Toolbar style={{ display: 'flex', alignItems: 'center' }}>
+      <Toolbar
+        style={{ display: 'flex', alignItems: 'center' }}
+        className="toolbar"
+      >
         <MarkButton format="bold" icon="bold" />
         <MarkButton format="italic" icon="italic" />
-        <MarkButton format="underline" icon="underline" />
-        <MarkButton format="strikethrough" icon="strikethrough" />
+        {/*<MarkButton format="underline" icon="underline" />*/}
+        {/*<MarkButton format="strikethrough" icon="strikethrough" />*/}
         <ColorButton format="color" />
-        <BlockButton format="code-block" icon="code-slash" />
+        <BlockButton
+          format="code-block"
+          icon="code-slash"
+          style={{ fontSize: '125%' }}
+        />
         <BlockButton format="block-quote" icon="quotes-right" />
-        <BlockButton format="heading-one" icon="header" />
+        {/*<BlockButton format="heading-one" icon="header" />*/}
+
+        <BlockButton format="heading-one" icon="font-size" />
+        <BlockButton
+          format="heading-two"
+          icon="font-size"
+          style={{ fontSize: '80%' }}
+        />
 
         {/* <BlockButton format="heading-one" icon="header1" />*/}
         {/* <BlockButton format="heading-two" icon="header2" />*/}
@@ -86,25 +100,26 @@ const Slator = () => {
 
         {/* <MarkButton format="underline" icon="font-size" />*/}
 
-        <ColorButton format="background" />
+        {/*<ColorButton format="background" />*/}
 
-        <AlignButton format="left" icon="paragraph-left" />
-        <AlignButton format="right" icon="paragraph-right" />
-        <AlignButton format="justify" icon="paragraph-justify" />
-        <AlignButton format="center" icon="paragraph-center" />
+        {/*<AlignButton format="left" icon="paragraph-left" />*/}
+        {/*<AlignButton format="right" icon="paragraph-right" />*/}
+        {/*<AlignButton format="justify" icon="paragraph-justify" />*/}
+        {/*<AlignButton format="center" icon="paragraph-center" />*/}
 
-        <IndentButton format="indent" icon="indent-increase" />
-        <IndentButton format="unindent" icon="indent-decrease" />
+        {/*<IndentButton format="indent" icon="indent-increase" />*/}
+        {/*<IndentButton format="unindent" icon="indent-decrease" />*/}
 
-        <MarkButton format="sup" icon="superscript" />
-        <MarkButton format="sub" icon="subscript" />
+        {/*<MarkButton format="sup" icon="superscript" />*/}
+        {/*<MarkButton format="sub" icon="subscript" />*/}
 
         {/* <MarkButton format="underline" icon="film" />*/}
       </Toolbar>
       <Editable
+        className="editor"
         renderElement={renderElement}
         renderLeaf={renderLeaf}
-        placeholder="Enter some rich text…"
+        placeholder="How can we live without a story to tell..."
         spellCheck
         autoFocus
         onKeyDown={(event) => {
@@ -117,13 +132,14 @@ const Slator = () => {
           }
         }}
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
-        onMouseUp={() => {
+        onMouseUp={(event) => {
           const selection = editor.selection
           if (selection && Range.isCollapsed(selection)) {
             const [match] = Editor.nodes(editor, {
               match: (node) => node.type === 'link',
             })
             if (match) {
+              event.preventDefault()
               const range = Editor.range(editor, match[1])
               const domRange = ReactEditor.toDOMRange(editor, range)
               const rect = domRange.getBoundingClientRect()
@@ -352,7 +368,7 @@ const Leaf = ({ attributes, children, leaf }) => {
   return <span {...attributes}>{children}</span>
 }
 
-const BlockButton = ({ format, icon }) => {
+const BlockButton = ({ format, icon, ...rest }) => {
   const editor = useSlate()
   const isActive = isBlockActive(editor, format)
   return (
@@ -363,14 +379,14 @@ const BlockButton = ({ format, icon }) => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
+      {...rest}
     >
-      {/* <Icon>{icon}</Icon>*/}
       <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
     </Button>
   )
 }
 
-const MarkButton = ({ format, icon }) => {
+const MarkButton = ({ format, icon, ...rest }) => {
   const editor = useSlate()
   const isActive = isMarkActive(editor, format)
   return (
@@ -380,6 +396,7 @@ const MarkButton = ({ format, icon }) => {
         event.preventDefault()
         toggleMark(editor, format)
       }}
+      {...rest}
     >
       <Icon type={icon} color={isActive ? '#1e1e1e' : '#6a6f7b'} />
     </Button>
@@ -451,6 +468,7 @@ const IndentButton = ({ format, icon }) => {
 }
 
 const initialValue = [
+  { type: 'heading-one', children: [{ text: 'hello rich editor' }] },
   {
     type: 'paragraph',
     children: [
@@ -463,6 +481,10 @@ const initialValue = [
       { text: '<textarea>', code: true },
       { text: '!' },
     ],
+  },
+  {
+    type: 'heading-two',
+    children: [{ text: 'finding she is the most important thing' }],
   },
   {
     type: 'paragraph',

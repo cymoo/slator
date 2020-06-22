@@ -118,23 +118,24 @@ export const EditorValue = React.forwardRef(
 // ))
 
 export const Icon = React.forwardRef((props, ref) => {
-  let { className, type, height, width, color, ...rest } = props
-
-  if (type === 'code-slash') {
-    height = 18
-    width = 18
-  }
+  const { className, type, color, ...rest } = props
 
   return (
-    <svg width={width} height={height} fill={color} {...rest}>
+    <svg
+      className={cx('icon', className)}
+      // width={width}
+      // height={height}
+      fill={color}
+      {...rest}
+    >
       <use xlinkHref={`${icons}#${type}`} />
     </svg>
   )
 })
 
 Icon.defaultProps = {
-  height: 16,
-  width: 16,
+  // height: 16,
+  // width: 16,
   color: '#6a6f7b',
 }
 
@@ -164,11 +165,13 @@ export const Menu = React.forwardRef(({ className, ...props }, ref) => (
       css`
         & > * {
           display: inline-block;
+          padding-left: 10px;
+          padding-right: 10px;
         }
 
-        & > * + * {
-          margin-left: 20px;
-        }
+        // & > * + * {
+        //   padding-left: 20px;
+        // }
       `
     )}
   />
@@ -183,13 +186,13 @@ export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
     {...props}
     ref={ref}
     className={cx(
-      'shadow-v3',
+      // 'shadow-v3',
       className,
       css`
         position: relative;
         padding: 1px 18px 17px;
         margin: 0 -20px;
-        // border-bottom: 2px solid #eee;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.09);
         margin-bottom: 20px;
       `
     )}

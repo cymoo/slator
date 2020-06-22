@@ -15,30 +15,30 @@ const App = () => {
       `}
     >
       <Slator />
-      <hr />
-      <QuillEditor
-        onChange={(value) => {
-          // console.log(value)
-        }}
-        imageUploadRequest={() => {
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve({
-                url:
-                  'https://www.bing.com/th?id=OHR.StStephens_ZH-CN9373191410_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
-              })
-            }, 5000)
-          })
-        }}
-      />
-      <hr />
-      <QuillEditor
-        theme="bubble"
-        onChange={(value) => {
-          // console.log(value)
-        }}
-        imageUploadRequest={() => Promise.resolve({ url: '' })}
-      />
+      {/* <hr />*/}
+      {/* <QuillEditor*/}
+      {/*  onChange={(value) => {*/}
+      {/*    // console.log(value)*/}
+      {/*  }}*/}
+      {/*  imageUploadRequest={() => {*/}
+      {/*    return new Promise((resolve) => {*/}
+      {/*      setTimeout(() => {*/}
+      {/*        resolve({*/}
+      {/*          url:*/}
+      {/*            'https://www.bing.com/th?id=OHR.StStephens_ZH-CN9373191410_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',*/}
+      {/*        })*/}
+      {/*      }, 5000)*/}
+      {/*    })*/}
+      {/*  }}*/}
+      {/* />*/}
+      {/* <hr />*/}
+      {/* <QuillEditor*/}
+      {/*  theme="bubble"*/}
+      {/*  onChange={(value) => {*/}
+      {/*    // console.log(value)*/}
+      {/*  }}*/}
+      {/*  imageUploadRequest={() => Promise.resolve({ url: '' })}*/}
+      {/* />*/}
     </div>
   )
 }
