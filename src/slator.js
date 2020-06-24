@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
+import HotKeys from './hotkeys'
 import {
   Editable,
   withReact,
@@ -18,7 +19,7 @@ import { withMDShortcuts } from './md-shortcuts'
 import { withPasteHtml } from './paste-html'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
 import { withLinks, LinkButton } from './links'
-import { withImages, ImageButton } from './images'
+import { withImages, ImageButton, ImageElement } from './images'
 import { LinkElement } from './links'
 import { ColorButton } from './color'
 import { css } from 'emotion'
@@ -48,6 +49,8 @@ const Slator = () => {
     []
   )
 
+  window.editor = editor
+
   const [showLinkPreview, setShowLinkPreview] = useState(false)
   const [linkPreviewPosition, setLinkPreviewPosition] = useState([
     -10000,
@@ -71,8 +74,8 @@ const Slator = () => {
       >
         <MarkButton format="bold" icon="bold" />
         <MarkButton format="italic" icon="italic" />
-        {/*<MarkButton format="underline" icon="underline" />*/}
-        {/*<MarkButton format="strikethrough" icon="strikethrough" />*/}
+        <MarkButton format="underline" icon="underline" />
+        <MarkButton format="strikethrough" icon="strikethrough" />
         <ColorButton format="color" />
         <BlockButton
           format="code-block"
@@ -80,7 +83,7 @@ const Slator = () => {
           style={{ fontSize: '125%' }}
         />
         <BlockButton format="block-quote" icon="quotes-right" />
-        {/*<BlockButton format="heading-one" icon="header" />*/}
+        {/* <BlockButton format="heading-one" icon="header" />*/}
 
         <BlockButton format="heading-one" icon="font-size" />
         <BlockButton
@@ -98,28 +101,46 @@ const Slator = () => {
         <LinkButton />
         <ImageButton />
 
-        {/* <MarkButton format="underline" icon="font-size" />*/}
+        <ColorButton format="background" />
 
-        {/*<ColorButton format="background" />*/}
+        <AlignButton format="left" icon="paragraph-left" />
+        <AlignButton format="right" icon="paragraph-right" />
+        <AlignButton format="justify" icon="paragraph-justify" />
+        <AlignButton format="center" icon="paragraph-center" />
 
-        {/*<AlignButton format="left" icon="paragraph-left" />*/}
-        {/*<AlignButton format="right" icon="paragraph-right" />*/}
-        {/*<AlignButton format="justify" icon="paragraph-justify" />*/}
-        {/*<AlignButton format="center" icon="paragraph-center" />*/}
+        <IndentButton format="indent" icon="indent-increase" />
+        <IndentButton format="unindent" icon="indent-decrease" />
 
-        {/*<IndentButton format="indent" icon="indent-increase" />*/}
-        {/*<IndentButton format="unindent" icon="indent-decrease" />*/}
-
-        {/*<MarkButton format="sup" icon="superscript" />*/}
-        {/*<MarkButton format="sub" icon="subscript" />*/}
+        <MarkButton format="sup" icon="superscript" />
+        <MarkButton format="sub" icon="subscript" />
 
         {/* <MarkButton format="underline" icon="film" />*/}
+
+        <Button
+          onMouseDown={(event) => {
+            event.preventDefault()
+            editor.undo()
+            console.log(editor.operations)
+          }}
+        >
+          <Icon type="undo" />
+        </Button>
+        <Button>
+          <Icon
+            type="redo"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              editor.redo()
+              console.log(editor.operations)
+            }}
+          />
+        </Button>
       </Toolbar>
       <Editable
         className="editor"
         renderElement={renderElement}
         renderLeaf={renderLeaf}
-        placeholder="How can we live without a story to tell..."
+        placeholder="找到她..."
         spellCheck
         autoFocus
         onKeyDown={(event) => {
@@ -130,6 +151,14 @@ const Slator = () => {
               toggleMark(editor, mark)
             }
           }
+          // if (HotKeys.isUndo(event)) {
+          //   console.log('undo...')
+          //   console.log(editor.operations)
+          // }
+          // if (HotKeys.isRedo(event)) {
+          //   console.log('redo...')
+          //   console.log(editor.operations)
+          // }
         }}
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
         onMouseUp={(event) => {
@@ -251,26 +280,9 @@ const Element = (props) => {
   switch (element.type) {
     case 'image':
       return (
-        <div {...attributes}>
-          <div
-            contentEditable={false}
-            style={{ textAlign: 'center', marginBottom: 10 }}
-          >
-            <img
-              src={element.url}
-              className={css`
-                display: inline-block;
-                width: 100%;
-                height: auto;
-                box-shadow: ${selected && focused
-                  ? '0 0 0 3px #B4D5FF'
-                  : 'none'};
-              `}
-              alt="TODO..."
-            />
-          </div>
+        <ImageElement attributes={attributes} element={element}>
           {children}
-        </div>
+        </ImageElement>
       )
     case 'link':
       return <LinkElement {...props} />

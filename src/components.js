@@ -302,7 +302,7 @@ export const TooltipInput = (props) => {
         placeholder={placeholder}
         className={css`
           width: 100%;
-          font-size: 13px;
+          font-size: 14px;
           border: none;
           background: transparent;
           outline: none;

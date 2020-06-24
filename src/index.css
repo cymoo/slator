@@ -231,35 +231,35 @@ img svg {
   font-family: Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
-.editor h1 {
+.editor h1, .editor h2, .editor h3, .editor h4, .editor h5 {
   color: rgba(41, 41, 41, 1);
-  letter-spacing: -0.022em;
-  margin-bottom: -0.28em;
   font-weight: 600;
-  line-height: 1.12;
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Arial, sans-serif;
+  line-height: 1.2;
+}
+
+.editor h1 {
+  font-size: 2.1em;
+  margin-bottom: -0.28em;
+  letter-spacing: -0.022em;
 }
 
 .editor h2 {
-
-  line-height: 1.18;
+  font-size: 1.7em;
   margin-bottom: -0.31em;
-  font-weight: 600;
   letter-spacing: -0.022em;
-  color: rgba(41, 41, 41, 1);
-  font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Arial, sans-serif;
 }
 
 .editor h3 {
-
+  font-size: 1.4em;
 }
 
 .editor h4 {
-
+  font-size: 1.3em;
 }
 
 .editor h5 {
-
+  font-size: 1.2em;
 }
 
 .editor pre {
@@ -345,44 +345,57 @@ img svg {
   -webkit-tap-highlight-color: transparent;
 }
 
-.editor figure {
-  clear: both;
-  margin-left: auto;
-  margin-right: auto;
-}
-.editor figure .img-wrapper {
-  position: relative;
-  background-color: rgba(242, 242, 242, 1);
-}
-.editor figure .placeholder-parent {
-  padding-bottom: 81.07714701601165%;
-  height: 0;
-}
-.editor figure .placeholder {
-  position: absolute;
-  left: 0;
-  top: 0;
-  transition: opacity 100ms 400ms;
-  transform: translateZ(0);
-  will-change: transform;
-  height: 100%;
-  opacity: 0;
-  overflow: hidden;
-  width: 100%;
-}
-.editor figure img {
-  height: 100%;
-  background: rgba(255, 255, 255, 1);
-  transition: opacity 100ms 400ms;
-  /*opacity: 0;*/
-  width: 100%;
-  left: 0;
-  top: 0;
-  position: absolute;
-}
+/*.editor figure {*/
+/*  clear: both;*/
+/*  margin-left: auto;*/
+/*  margin-right: auto;*/
+/*}*/
+/*.editor figure .img-wrapper {*/
+/*  position: relative;*/
+/*  background-color: rgba(242, 242, 242, 1);*/
+/*}*/
+/*.editor figure .placeholder-parent {*/
+/*  padding-bottom: 81.07714701601165%;*/
+/*  height: 0;*/
+/*}*/
+/*.editor figure .placeholder {*/
+/*  position: absolute;*/
+/*  left: 0;*/
+/*  top: 0;*/
+/*  transition: opacity 100ms 400ms;*/
+/*  transform: translateZ(0);*/
+/*  will-change: transform;*/
+/*  height: 100%;*/
+/*  opacity: 0;*/
+/*  overflow: hidden;*/
+/*  width: 100%;*/
+/*}*/
+/*.editor figure img {*/
+/*  height: 100%;*/
+/*  background: rgba(255, 255, 255, 1);*/
+/*  transition: opacity 100ms 400ms;*/
+/*  !*opacity: 0;*!*/
+/*  width: 100%;*/
+/*  left: 0;*/
+/*  top: 0;*/
+/*  position: absolute;*/
+/*}*/
 
 .editor img {
 
+}
+
+.editor figcaption {
+  font-size: 14px;
+  text-align: center;
+  color: #999;
+}
+
+.editor figcaption input {
+  width: 100%;
+  outline: none;
+  border: none;
+  text-align: center;
 }
 
 .editor code {

@@ -63,7 +63,7 @@ export const withMDShortcuts = (editor) => {
 
     if (selection && Range.isCollapsed(selection)) {
       const match = Editor.above(editor, {
-        match: (n) => Editor.isBlock(editor, n),
+        match: (n) => Editor.isBlock(editor, n) && !Editor.isVoid(editor, n),
       })
 
       if (match) {

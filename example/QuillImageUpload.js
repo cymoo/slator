@@ -14,6 +14,7 @@ export class ImageUploadBlot extends BlockEmbed {
   static value(node) {
     return {
       url: node.getAttribute('src'),
+      id: node.getAttribute('id'),
     }
   }
 }

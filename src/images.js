@@ -1,11 +1,19 @@
-import React from 'react'
+import React, { useState } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
-import { Editor, Transforms } from 'slate'
-import { useEditor } from 'slate-react'
+import { Editor, Transforms, Path } from 'slate'
+import {
+  useEditor,
+  useFocused,
+  useSelected,
+  ReactEditor,
+  useReadOnly,
+} from 'slate-react'
 import { randomString } from './utils'
+import { HistoryEditor } from 'slate-history'
 
 import { Button, Icon } from './components'
+import { css } from 'emotion'
 
 export const withImages = (editor) => {
   const { insertData, isVoid, insertBreak } = editor
@@ -53,6 +61,105 @@ export const withImages = (editor) => {
   return editor
 }
 
+export const ImageElement = ({ attributes, children, element }) => {
+  const editor = useEditor()
+  const selected = useSelected()
+  const focused = useFocused()
+  const readOnly = useReadOnly()
+  const { url, alt } = element
+
+  return (
+    <figure {...attributes}>
+      <div
+        contentEditable={false}
+        style={{ textAlign: 'center', marginTop: 30 }}
+      >
+        <img
+          onClick={(event) => {
+            //
+          }}
+          src={url}
+          alt={alt}
+          className={css`
+            display: inline-block;
+            width: 100%;
+            height: auto;
+            box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
+          `}
+        />
+        <figcaption>
+          {readOnly ? (
+            { alt }
+          ) : (
+            <CaptionInput
+              caption={alt}
+              onChange={(val) => {
+                const path = ReactEditor.findPath(editor, element)
+                Transforms.setNodes(editor, { alt: val }, { at: path })
+              }}
+              onEnter={() => {
+                // https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLElement/focus
+                const path = ReactEditor.findPath(editor, element)
+                // TODO: last的实现貌似有BUG...可以提交issue
+                const [_, lastPath] = Editor.last(editor, path.slice(0, -1))
+
+                // TODO: ugly...
+                if (
+                  Path.isParent(path, lastPath) ||
+                  Path.equals(path, lastPath)
+                ) {
+                  Transforms.insertNodes(
+                    editor,
+                    {
+                      type: 'paragraph',
+                      children: [{ text: '' }],
+                    },
+                    // TODO: void元素的end是啥?
+                    { at: Editor.end(editor, path) }
+                  )
+                  Transforms.move(editor)
+                } else {
+                  const start = Editor.start(editor, Path.next(path))
+                  Transforms.move(editor, start)
+                }
+                const root = ReactEditor.toDOMNode(editor, editor)
+                root.focus({ preventScroll: true })
+              }}
+            />
+          )}
+        </figcaption>
+      </div>
+      {children}
+    </figure>
+  )
+}
+
+const CaptionInput = ({ caption, onChange, onEnter }) => {
+  // const [value, setValue] = useState(caption || '')
+  // TODO: Ctrl + Z 无法撤销？ why?
+  return (
+    <input
+      id="foo"
+      placeholder="添加图片说明（可选）"
+      onClick={(event) => event.stopPropagation()}
+      // TODO: onKeyDown和onKeyUp的行为不一样...why?
+      onKeyUp={(event) => {
+        // event.preventDefault()
+        event.stopPropagation()
+        if (event.key === 'Enter') {
+          onEnter()
+        }
+      }}
+      value={caption}
+      onChange={(event) => {
+        const newVal = event.target.value
+        // setValue(newVal)
+        onChange(newVal)
+      }}
+    />
+  )
+}
+
 export const ImageButton = () => {
   const editor = useEditor()
   const ref = React.useRef()
@@ -78,7 +185,7 @@ export const ImageButton = () => {
                   url:
                     'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
                 })
-              }, 1000)
+              }, 3000)
             })
           })
         }}
@@ -87,32 +194,58 @@ export const ImageButton = () => {
   )
 }
 
+// https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
 const uploadImage = (editor, file, request) => {
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
+  // const reader = new FileReader()
+  // reader.readAsDataURL(file)
+  // reader.onload = () => {
+  //   const id = randomString()
+  //   insertImage(editor, reader.result, id)
+  // }
 
-  reader.onload = () => {
-    const id = randomString()
-    insertImage(editor, reader.result, id)
+  // reader.onerror = () => {}
+  const url = window.URL.createObjectURL(file)
+  const id = randomString()
+  insertImage(editor, url, id)
 
-    request()
-      .then((data) => {
-        const [match] = Editor.nodes(editor, {
-          match: (node) => node.id === id,
-        })
-        if (match) {
-          Transforms.setNodes(editor, { url: data.url }, { at: match[1] })
-        }
+  request()
+    .then((data) => {
+      // TODO: where to place it?
+      // window.URL.revokeObjectURL(url)
+      const [match] = Editor.nodes(editor, {
+        match: (node) => node.id === id,
       })
-      .catch((err) => {})
-  }
-
-  reader.onerror = () => {}
+      if (match) {
+        HistoryEditor.withoutSaving(editor, () => {
+          Transforms.setNodes(editor, { url: data.url }, { at: match[1] })
+        })
+        // TODO: need a better way to replace image url
+        for (const undo of editor.history.undos) {
+          for (const op of undo) {
+            if (
+              op.type === 'insert_node' &&
+              op.node.type === 'image' &&
+              op.node.id === id
+            ) {
+              // node is frozen; so a clone is needed
+              op.node = { ...op.node, url: data.url }
+              return
+            }
+          }
+        }
+      }
+    })
+    .catch((err) => {
+      // retry when timeout or 500 error
+    })
+    .finally(() => {
+      //
+    })
 }
 
-const insertImage = (editor, url, id) => {
+const insertImage = (editor, url, id, alt = '') => {
   const text = { text: '' }
-  const image = { type: 'image', url, id, children: [text] }
+  const image = { type: 'image', url, id, alt, children: [text] }
   Transforms.insertNodes(editor, image)
 }
 

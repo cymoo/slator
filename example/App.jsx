@@ -3,6 +3,7 @@ import { css, cx } from 'emotion'
 import Slator from '../src/slator'
 import { useClickAway } from '../src/utils'
 import QuillEditor from './QuillEditor'
+// import './index.css'
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
       {/* <hr />*/}
       {/* <QuillEditor*/}
       {/*  theme="bubble"*/}
+      {/*  className="editor"*/}
       {/*  onChange={(value) => {*/}
       {/*    // console.log(value)*/}
       {/*  }}*/}

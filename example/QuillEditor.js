@@ -4,6 +4,8 @@ import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 import PropTypes from 'prop-types'
 
+import './index.css'
+
 import QuillImageUpload from './QuillImageUpload'
 
 Quill.register('modules/imageUpload', QuillImageUpload)
@@ -98,6 +100,6 @@ export default class QuillEditor extends React.Component {
   }
 
   render() {
-    return <div ref={this.ref} />
+    return <div ref={this.ref} className="editor" />
   }
 }
