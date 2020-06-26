@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
 import { Editor, Transforms, Path } from 'slate'
+import { useClickAway } from './utils'
 import {
   useEditor,
   useFocused,
   useSelected,
   ReactEditor,
   useReadOnly,
+  useSlate,
 } from 'slate-react'
 import { randomString } from './utils'
 import { HistoryEditor } from 'slate-history'
@@ -61,24 +63,121 @@ export const withImages = (editor) => {
   return editor
 }
 
-export const ImageElement = ({ attributes, children, element }) => {
+const urls = new Map()
+
+export const ImageElement = (props) => {
+  const {
+    attributes,
+    children,
+    element,
+    imageUploadRequest,
+    onImageUploadSuccess,
+    onImageUploadError,
+  } = props
+  // console.log(element)
+
   const editor = useEditor()
   const selected = useSelected()
   const focused = useFocused()
   const readOnly = useReadOnly()
-  const { url, alt } = element
+
+  const [captionShow, setCaptionShow] = useState(true)
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const ref = useClickAway(() => setCaptionShow(false))
+
+  const { file, url, alt, id } = element
+
+  useEffect(() => {
+    if (url) return
+
+    if (urls.has(id)) {
+      console.log('when undo or redo...')
+      const [match] = Editor.nodes(editor, {
+        match: (node) => node.type === 'image' && node.id === id,
+        at: [],
+      })
+      if (match) {
+        setLoading(false)
+        // TODO: file在element中消失了？ why???
+        HistoryEditor.withoutSaving(editor, () => {
+          Transforms.setNodes(
+            editor,
+            { file: null, url: urls.get(id) },
+            { at: match[1] }
+          )
+        })
+      }
+      return
+    }
+
+    console.log('when uploading...')
+    setLoading(true)
+    imageUploadRequest()
+      .then((data) => {
+        setError(null)
+        onImageUploadSuccess?.(data)
+        urls.set(id, data.url)
+        const [match] = Editor.nodes(editor, {
+          match: (node) => node.type === 'image' && node.id === id,
+          at: [],
+        })
+        if (match) {
+          HistoryEditor.withoutSaving(editor, () => {
+            Transforms.setNodes(
+              editor,
+              { file: null, url: data.url },
+              { at: match[1] }
+            )
+          })
+        }
+      })
+      .catch((err) => {
+        console.log('error')
+        setError(err)
+        onImageUploadError?.(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+    // setTimeout(() => {
+    //   console.log('still uploading...')
+    //   const url =
+    //     ''
+    //   urls.set(id, url)
+    //
+    //   const [match] = Editor.nodes(editor, {
+    //     match: (node) => node.id === id,
+    //     at: [],
+    //   })
+    //   if (match) {
+    //     setLoading(false)
+    //     HistoryEditor.withoutSaving(editor, () => {
+    //       Transforms.setNodes(editor, { file: null, url }, { at: match[1] })
+    //     })
+    //   }
+    // }, 3000)
+  }, [id, url])
 
   return (
     <figure {...attributes}>
       <div
+        ref={ref}
         contentEditable={false}
         style={{ textAlign: 'center', marginTop: 30 }}
       >
         <img
-          onClick={(event) => {
-            //
+          onLoad={() => {
+            // console.log('image loaded')
           }}
-          src={url}
+          onClick={(event) => {
+            event.preventDefault()
+            setCaptionShow(true)
+          }}
+          // TODO: where to revoke objectURL
+          src={url || window.URL.createObjectURL(file)}
           alt={alt}
           className={css`
             display: inline-block;
@@ -87,17 +186,27 @@ export const ImageElement = ({ attributes, children, element }) => {
             box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
           `}
         />
-        <figcaption>
+        {loading && <span>loading...</span>}
+        {error && <span style={{ color: 'red' }}>网络错误，稍后再重试</span>}
+        <figcaption
+          style={{
+            opacity: !captionShow && alt === '' ? 0 : 1,
+            transition: 'opacity 0.13s ease-in-out',
+          }}
+        >
           {readOnly ? (
-            { alt }
+            alt
           ) : (
             <CaptionInput
+              // style={{ opacity: 1 }}
               caption={alt}
               onChange={(val) => {
+                setCaptionShow(true)
                 const path = ReactEditor.findPath(editor, element)
                 Transforms.setNodes(editor, { alt: val }, { at: path })
               }}
               onEnter={() => {
+                setCaptionShow(false)
                 // https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLElement/focus
                 const path = ReactEditor.findPath(editor, element)
                 // TODO: last的实现貌似有BUG...可以提交issue
@@ -134,11 +243,11 @@ export const ImageElement = ({ attributes, children, element }) => {
   )
 }
 
-const CaptionInput = ({ caption, onChange, onEnter }) => {
+const CaptionInput = ({ caption, onChange, onEnter, ...rest }) => {
   // const [value, setValue] = useState(caption || '')
-  // TODO: Ctrl + Z 无法撤销？ why?
   return (
     <input
+      {...rest}
       id="foo"
       placeholder="添加图片说明（可选）"
       onClick={(event) => event.stopPropagation()}
@@ -150,8 +259,17 @@ const CaptionInput = ({ caption, onChange, onEnter }) => {
           onEnter()
         }
       }}
+      onKeyDown={(event) => {
+        event.stopPropagation()
+        // TODO: 默认的Ctrl + Z 无法撤销？ why?
+        // if (Hotkeys.isUndo(event)) {
+        //   // event.target.value = ''
+        //   onChange('')
+        // }
+      }}
       value={caption}
       onChange={(event) => {
+        event.stopPropagation()
         const newVal = event.target.value
         // setValue(newVal)
         onChange(newVal)
@@ -177,17 +295,25 @@ export const ImageButton = () => {
         ref={ref}
         style={{ display: 'none' }}
         onChange={() => {
-          uploadImage(editor, ref.current.files[0], () => {
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                ref.current.value = ''
-                resolve({
-                  url:
-                    'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
-                })
-              }, 3000)
-            })
+          Transforms.insertNodes(editor, {
+            type: 'image',
+            id: randomString(),
+            url: '',
+            alt: '',
+            file: ref.current.files[0],
+            children: [{ text: '' }],
           })
+          // uploadImage(editor, ref.current.files[0], () => {
+          //   return new Promise((resolve) => {
+          //     setTimeout(() => {
+          //       ref.current.value = ''
+          //       resolve({
+          //         url:
+          //           'https://www.bing.com/th?id=OHR.SantaElena_ZH-CN8036210800_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=HpEdgeAn',
+          //       })
+          //     }, 3000)
+          //   })
+          // })
         }}
       />
     </Button>

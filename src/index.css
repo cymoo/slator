@@ -48,7 +48,8 @@ img svg {
     margin-top: 56px;
   }
   .editor blockquote {
-    margin-top: 2.75em;
+    /*margin-top: 2.75em;*/
+    margin-top: 1.75em;
   }
   .editor li {
     line-height: 32px;
@@ -109,7 +110,8 @@ img svg {
     margin-top: 56px;
   }
   .editor blockquote {
-    margin-top: 2.75em;
+    /*margin-top: 2.75em;*/
+    margin-top: 1.75em;
   }
   .editor li {
     line-height: 32px;
@@ -168,7 +170,8 @@ img svg {
     font-size: 24px;
   }
   .editor pre {
-    margin-top: 40px;
+    /*margin-top: 40px;*/
+    margin-top: 20px;
   }
   .editor blockquote {
     margin-top: 1.42em;
@@ -202,7 +205,8 @@ img svg {
     margin-top: 40px;
   }
   .editor blockquote {
-    margin-top: 1.42em;
+    /*margin-top: 1.42em;*/
+    margin-top: 15px;
   }
   .editor li {
     margin-top: 1.56em;
@@ -386,12 +390,14 @@ img svg {
 }
 
 .editor figcaption {
-  font-size: 14px;
   text-align: center;
-  color: #999;
+  /*transition: opacity 0.2s ease-in;*/
 }
 
 .editor figcaption input {
+  color: #777;
+  padding: 5px;
+  font-size: 15px;
   width: 100%;
   outline: none;
   border: none;

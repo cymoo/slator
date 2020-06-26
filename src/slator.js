@@ -2,15 +2,7 @@ import React, { useCallback, useMemo, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
 import HotKeys from './hotkeys'
-import {
-  Editable,
-  withReact,
-  ReactEditor,
-  useSlate,
-  Slate,
-  useSelected,
-  useFocused,
-} from 'slate-react'
+import { Editable, withReact, ReactEditor, useSlate, Slate } from 'slate-react'
 import { Editor, Transforms, createEditor, Range } from 'slate'
 import { withHistory } from 'slate-history'
 
@@ -33,9 +25,21 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const Slator = () => {
+const Slator = (props) => {
+  const { imageUploadRequest, onImageUploadSuccess, onImageUploadError } = props
+
   const [value, setValue] = useState(initialValue)
-  const renderElement = useCallback((props) => <Element {...props} />, [])
+  const renderElement = useCallback(
+    (props) => (
+      <Element
+        {...props}
+        imageUploadRequest={imageUploadRequest}
+        onImageUploadSuccess={onImageUploadSuccess}
+        onImageUploadError={onImageUploadError}
+      />
+    ),
+    []
+  )
   const renderLeaf = useCallback((props) => <Leaf {...props} />, [])
   const editor = useMemo(
     () =>
@@ -151,6 +155,7 @@ const Slator = () => {
               toggleMark(editor, mark)
             }
           }
+          // console.log(event.key)
           // if (HotKeys.isUndo(event)) {
           //   console.log('undo...')
           //   console.log(editor.operations)
@@ -264,10 +269,6 @@ const isMarkActive = (editor, format) => {
 
 const Element = (props) => {
   const { attributes, children, element } = props
-  // TODO: selected VS focused, what's the difference?
-  const selected = useSelected()
-  const focused = useFocused()
-
   const { align, indent } = element
   const style = {}
   if (align) {
@@ -279,11 +280,7 @@ const Element = (props) => {
 
   switch (element.type) {
     case 'image':
-      return (
-        <ImageElement attributes={attributes} element={element}>
-          {children}
-        </ImageElement>
-      )
+      return <ImageElement {...props}>{children}</ImageElement>
     case 'link':
       return <LinkElement {...props} />
     case 'code-block':
@@ -511,6 +508,13 @@ const initialValue = [
           ', or add a semantically rendered block quote in the middle of the page, like this:',
       },
     ],
+  },
+  {
+    type: 'image',
+    alt: '一定要去这个地方',
+    url:
+      'https://cn.bing.com/th?id=OHR.RhodesIsland_EN-CN2167254194_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
+    children: [{ text: '' }],
   },
   {
     type: 'block-quote',

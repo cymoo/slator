@@ -6,6 +6,7 @@ import QuillEditor from './QuillEditor'
 // import './index.css'
 
 const App = () => {
+  const [value, setValue] = useState('')
   return (
     <div
       className={css`
@@ -15,7 +16,35 @@ const App = () => {
         max-width: 1000px;
       `}
     >
-      <Slator />
+      {/* <input*/}
+      {/*  type="text"*/}
+      {/*  placeholder="write here..."*/}
+      {/*  value={value}*/}
+      {/*  onChange={(event) => setValue(event.target.value)}*/}
+      {/* />*/}
+      {/* <hr />*/}
+      <Slator
+        imageUploadRequest={() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (Math.random() > 0.7) {
+                reject('timeout')
+                return
+              }
+              resolve({
+                url:
+                  'https://cn.bing.com/th?id=OHR.GorchFock_EN-CN2672694129_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
+              })
+            }, 3000)
+          })
+        }}
+        onImageUploadSuccess={() => {
+          // console.log('image has been upload to server')
+        }}
+        onImageUploadError={() => {
+          // console.log('image upload error')
+        }}
+      />
       {/* <hr />*/}
       {/* <QuillEditor*/}
       {/*  onChange={(value) => {*/}
