@@ -7,14 +7,14 @@ import { Editor, Transforms, createEditor, Range } from 'slate'
 import { withHistory } from 'slate-history'
 
 import { Button, Icon, Toolbar, Tooltip, TooltipInput } from './components'
-import { withMDShortcuts } from './md-shortcuts'
+import { withMarkdownShortcuts } from './markdown'
 import { withPasteHtml } from './paste-html'
-import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code-block'
-import { withLinks, LinkButton } from './links'
-import { withImages, ImageButton, ImageElement } from './images'
-import { LinkElement } from './links'
+import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code'
+import { withLinks, LinkButton, LinkElement } from './link'
+import { withImages, ImageButton, ImageElement } from './image'
 import { ColorButton } from './color'
-import { css } from 'emotion'
+import { withDivider, DividerButton, DividerElement } from './divider'
+import './style.css'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -26,9 +26,20 @@ const HOTKEYS = {
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const Slator = (props) => {
-  const { imageUploadRequest, onImageUploadSuccess, onImageUploadError } = props
+  const {
+    value,
+    onChange,
+    readOnly,
+    markdown,
+    pastHTML,
+    imageUploadRequest,
+    onImageUploadSuccess,
+    onImageUploadError,
+    imageRetryDelay,
+    imageRetryCount,
+  } = props
 
-  const [value, setValue] = useState(initialValue)
+  // const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(
     (props) => (
       <Element
@@ -36,23 +47,28 @@ const Slator = (props) => {
         imageUploadRequest={imageUploadRequest}
         onImageUploadSuccess={onImageUploadSuccess}
         onImageUploadError={onImageUploadError}
+        imageRetryDelay={imageRetryDelay}
+        imageRetryCount={imageRetryCount}
       />
     ),
-    []
+    [imageUploadRequest, onImageUploadSuccess, onImageUploadSuccess]
   )
   const renderLeaf = useCallback((props) => <Leaf {...props} />, [])
   const editor = useMemo(
     () =>
       withHistory(
         withPasteHtml(
-          withMDShortcuts(
-            withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+          withMarkdownShortcuts(
+            withDivider(
+              withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+            )
           )
         )
       ),
     []
   )
 
+  // NOTE: remove it later
   window.editor = editor
 
   const [showLinkPreview, setShowLinkPreview] = useState(false)
@@ -69,7 +85,8 @@ const Slator = (props) => {
       value={value}
       onChange={(value) => {
         // console.log(editor.selection)
-        setValue(value)
+        // setValue(value)
+        onChange(value)
       }}
     >
       <Toolbar
@@ -80,7 +97,6 @@ const Slator = (props) => {
         <MarkButton format="italic" icon="italic" />
         <MarkButton format="underline" icon="underline" />
         <MarkButton format="strikethrough" icon="strikethrough" />
-        <ColorButton format="color" />
         <BlockButton
           format="code-block"
           icon="code-slash"
@@ -105,6 +121,7 @@ const Slator = (props) => {
         <LinkButton />
         <ImageButton />
 
+        <ColorButton format="color" />
         <ColorButton format="background" />
 
         <AlignButton format="left" icon="paragraph-left" />
@@ -118,7 +135,7 @@ const Slator = (props) => {
         <MarkButton format="sup" icon="superscript" />
         <MarkButton format="sub" icon="subscript" />
 
-        {/* <MarkButton format="underline" icon="film" />*/}
+        <DividerButton />
 
         <Button
           onMouseDown={(event) => {
@@ -146,6 +163,7 @@ const Slator = (props) => {
         renderLeaf={renderLeaf}
         placeholder="找到她..."
         spellCheck
+        readOnly={readOnly}
         autoFocus
         onKeyDown={(event) => {
           for (const hotkey in HOTKEYS) {
@@ -221,6 +239,16 @@ const Slator = (props) => {
   )
 }
 
+Slator.defaultProps = {
+  readOnly: false,
+  markdown: true,
+  pasteHtml: true,
+  imageRetryDelay: 3,
+  imageRetryCount: 5,
+  allowedImageTypes: ['png', 'jpg', 'jpeg', 'gif'],
+  maxImageSize: 1024 * 1024 * 5,
+}
+
 const toggleBlock = (editor, format) => {
   if (format === 'code-block') {
     toggleCodeBlock(editor)
@@ -280,9 +308,11 @@ const Element = (props) => {
 
   switch (element.type) {
     case 'image':
-      return <ImageElement {...props}>{children}</ImageElement>
+      return <ImageElement {...props} />
     case 'link':
       return <LinkElement {...props} />
+    case 'divider':
+      return <DividerElement {...props} />
     case 'code-block':
       return (
         <CodeBlock attributes={attributes} style={style}>
@@ -475,55 +505,5 @@ const IndentButton = ({ format, icon }) => {
     </Button>
   )
 }
-
-const initialValue = [
-  { type: 'heading-one', children: [{ text: 'hello rich editor' }] },
-  {
-    type: 'paragraph',
-    children: [
-      { text: 'This is editable ' },
-      { text: 'rich', bold: true },
-      // { text: ' text, ' },
-      { type: 'link', url: 'http://bing.com', children: [{ text: ' text, ' }] },
-      { text: 'much', italic: true },
-      { text: ' better than a ' },
-      { text: '<textarea>', code: true },
-      { text: '!' },
-    ],
-  },
-  {
-    type: 'heading-two',
-    children: [{ text: 'finding she is the most important thing' }],
-  },
-  {
-    type: 'paragraph',
-    children: [
-      {
-        text:
-          "Since it's rich text, you can do things like turn a selection of text ",
-      },
-      { text: 'bold', bold: true },
-      {
-        text:
-          ', or add a semantically rendered block quote in the middle of the page, like this:',
-      },
-    ],
-  },
-  {
-    type: 'image',
-    alt: '一定要去这个地方',
-    url:
-      'https://cn.bing.com/th?id=OHR.RhodesIsland_EN-CN2167254194_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
-    children: [{ text: '' }],
-  },
-  {
-    type: 'block-quote',
-    children: [{ text: 'A wise quote.' }],
-  },
-  {
-    type: 'code-block',
-    children: [{ text: 'def foo():\n    print("hello world")\n' }],
-  },
-]
 
 export default Slator

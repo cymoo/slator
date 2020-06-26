@@ -13,7 +13,7 @@ const SHORTCUTS = {
   '``': 'code-block',
 }
 
-export const withMDShortcuts = (editor) => {
+export const withMarkdownShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor
 
   editor.insertText = (text) => {

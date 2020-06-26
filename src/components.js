@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { cx, css } from 'emotion'
 import icons from './icons.svg'
-import './index.css'
 // import MDIcon from '@mdi/react'
 // import {
 //   mdiFormatBold,

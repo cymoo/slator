@@ -7,7 +7,7 @@ module.exports = {
   mode: 'development',
   devtool: 'eval-source-map',
   entry: {
-    main: path.resolve(projectRoot, 'example/main.js')
+    main: path.resolve(projectRoot, 'example/main.js'),
   },
   output: {
     path: path.resolve(projectRoot, 'example/dist'),
@@ -24,7 +24,7 @@ module.exports = {
       {
         test: /\.jsx?$/,
         loader: 'babel-loader',
-        include: [__dirname, path.join(projectRoot, 'src')]
+        include: [__dirname, path.join(projectRoot, 'src')],
       },
       {
         test: /\.css$/,
@@ -35,10 +35,10 @@ module.exports = {
             options: {
               sourceMap: true,
               /* https://www.webpackjs.com/loaders/css-loader/#importloaders */
-              importLoaders: 1
-            }
+              importLoaders: 1,
+            },
           },
-        ]
+        ],
       },
       {
         test: /\.(png|jpe?g|gif|svg)$/,
@@ -48,10 +48,10 @@ module.exports = {
             options: {
               name: '[name].[ext]',
               outputPath: 'img',
-              publicPath: '/public/img'
-            }
-          }
-        ]
+              publicPath: '/public/img',
+            },
+          },
+        ],
       },
       {
         test: /\.(woff2?|eot|ttf|otf)$/,
@@ -61,12 +61,12 @@ module.exports = {
             options: {
               name: '[name].[ext]',
               outputPath: 'font',
-              publicPath: '/public/font'
-            }
-          }
-        ]
-      }
-    ]
+              publicPath: '/public/font',
+            },
+          },
+        ],
+      },
+    ],
   },
   plugins: [
     new HTMLWebpackPlugin({
@@ -74,12 +74,12 @@ module.exports = {
       template: path.join(__dirname, 'index.html'),
       favicon: path.join(__dirname, 'favicon.ico'),
       inject: true,
-    })
+    }),
   ],
   watch: true,
   watchOptions: {
     /* 将多个更改聚合到单个重构建(rebuild) */
     aggregateTimeout: 500,
-    ignored: path.resolve(__dirname, '..', 'node_modules')
-  }
+    ignored: path.resolve(__dirname, '..', 'node_modules'),
+  },
 }

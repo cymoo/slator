@@ -6,7 +6,7 @@ import QuillEditor from './QuillEditor'
 // import './index.css'
 
 const App = () => {
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState(initialValue)
   return (
     <div
       className={css`
@@ -24,17 +24,20 @@ const App = () => {
       {/* />*/}
       {/* <hr />*/}
       <Slator
+        // readOnly
+        value={value}
+        onChange={(value) => setValue(value)}
         imageUploadRequest={() => {
           return new Promise((resolve, reject) => {
             setTimeout(() => {
-              if (Math.random() > 0.7) {
+              if (Math.random() > 0.3) {
                 reject('timeout')
-                return
+              } else {
+                resolve({
+                  url:
+                    'https://cn.bing.com/th?id=OHR.GorchFock_EN-CN2672694129_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
+                })
               }
-              resolve({
-                url:
-                  'https://cn.bing.com/th?id=OHR.GorchFock_EN-CN2672694129_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
-              })
             }, 3000)
           })
         }}
@@ -227,5 +230,55 @@ const TooltipInput = (props) => {
 TooltipInput.defaultProps = {
   placeholder: '链接地址',
 }
+
+const initialValue = [
+  { type: 'heading-one', children: [{ text: 'hello rich editor' }] },
+  {
+    type: 'paragraph',
+    children: [
+      { text: 'This is editable ' },
+      { text: 'rich', bold: true },
+      // { text: ' text, ' },
+      { type: 'link', url: 'http://bing.com', children: [{ text: ' text, ' }] },
+      { text: 'much', italic: true },
+      { text: ' better than a ' },
+      { text: '<textarea>', code: true },
+      { text: '!' },
+    ],
+  },
+  {
+    type: 'heading-two',
+    children: [{ text: 'finding her is the most important thing' }],
+  },
+  {
+    type: 'paragraph',
+    children: [
+      {
+        text:
+          "Since it's rich text, you can do things like turn a selection of text ",
+      },
+      { text: 'bold', bold: true },
+      {
+        text:
+          ', or add a semantically rendered block quote in the middle of the page, like this:',
+      },
+    ],
+  },
+  {
+    type: 'image',
+    alt: '一定要去这个地方',
+    url:
+      'https://cn.bing.com/th?id=OHR.RhodesIsland_EN-CN2167254194_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
+    children: [{ text: '' }],
+  },
+  {
+    type: 'block-quote',
+    children: [{ text: 'A wise quote.' }],
+  },
+  {
+    type: 'code-block',
+    children: [{ text: 'def foo():\n    print("hello world")\n' }],
+  },
+]
 
 export default App

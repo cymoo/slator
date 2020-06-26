@@ -323,20 +323,29 @@ img svg {
 }
 
 .editor hr {
-  margin-top: 30px;
+  margin: 4.5em auto;
+  width: 240px;
+  max-width: 100%;
   border: none;
-  color: rgb(8, 8, 8);
-  font-size: 28px;
-  text-align: center;
-  font-weight: 300;
+  border-top: 1px solid #d3d3d3;
 }
-.editor hr:before {
-  line-height: 1.4;
-  font-style: italic;
-  text-indent: 0.6em;
-  letter-spacing: 0.6em;
-  content: "...";
-}
+
+/*.editor hr {*/
+/*  margin-top: 30px;*/
+/*  border: none;*/
+/*  color: rgb(117, 117, 117);*/
+/*  text-align: center;*/
+/*}*/
+/*.editor hr:before {*/
+/*  font-size: 27px;*/
+/*  line-height: 1;*/
+/*  font-weight: 400;*/
+/*  font-style: italic;*/
+/*  !*text-indent: 0.6em;*!*/
+/*  !*letter-spacing: 0.6em;*!*/
+/*  letter-spacing: 18px;*/
+/*  content: "...";*/
+/*}*/
 
 .editor a {
   /*background-position: 0 1.05em;*/

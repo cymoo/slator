@@ -37,29 +37,29 @@ export const withLinks = (editor) => {
   return editor
 }
 
-export const LinkButton1 = () => {
-  const editor = useSlate()
-  return (
-    <Button
-      active={isLinkActive(editor)}
-      onMouseDown={(event) => {
-        event.preventDefault()
-        if (isLinkActive(editor)) {
-          unwrapLink(editor)
-        } else {
-          const url = window.prompt('Enter the URL of the link:')
-          if (url) {
-            insertLink(editor, url)
-          }
-        }
-      }}
-    >
-      <Icon type="bi-link" />
-    </Button>
-  )
-}
+// export const LinkButton1 = () => {
+//   const editor = useSlate()
+//   return (
+//     <Button
+//       active={isLinkActive(editor)}
+//       onMouseDown={(event) => {
+//         event.preventDefault()
+//         if (isLinkActive(editor)) {
+//           unwrapLink(editor)
+//         } else {
+//           const url = window.prompt('Enter the URL of the link:')
+//           if (url) {
+//             insertLink(editor, url)
+//           }
+//         }
+//       }}
+//     >
+//       <Icon type="bi-link" />
+//     </Button>
+//   )
+// }
+
 export const LinkButton = () => {
-  // TODO: 搞清楚useSlate和useEditor的区别...
   const editor = useSlate()
   // const editor = useEditor()
   const [show, setShow] = useState(false)
