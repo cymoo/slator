@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
 import { Editor, Transforms, Path } from 'slate'
@@ -14,7 +14,7 @@ import { randomString } from './utils'
 import { HistoryEditor } from 'slate-history'
 
 import { Button, Icon } from './components'
-import { css } from 'emotion'
+import { css, cx } from 'emotion'
 
 export const withImages = (editor) => {
   const { insertData, isVoid, insertBreak } = editor
@@ -57,7 +57,6 @@ export const withImages = (editor) => {
 
 const urls = new Map()
 
-// https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
 export const ImageElement = (props) => {
   const {
     attributes,
@@ -80,30 +79,24 @@ export const ImageElement = (props) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // test
+  const [imageLoaded, setImageLoaded] = useState(false)
+
   const ref = useClickAway(() => setCaptionShow(false))
 
   const { file, url, alt, id } = element
+  const objectURL = useMemo(
+    () => (file ? window.URL.createObjectURL(file) : ''),
+    [file]
+  )
 
   useEffect(() => {
     if (url) return
     if (!file) return
 
     if (urls.has(id)) {
-      const [match] = Editor.nodes(editor, {
-        match: (node) => node.type === 'image' && node.id === id,
-        at: [],
-      })
-      if (match) {
-        setLoading(false)
-        // TODO: file在element中消失了？
-        HistoryEditor.withoutSaving(editor, () => {
-          Transforms.setNodes(
-            editor,
-            { file: null, url: urls.get(id) },
-            { at: match[1] }
-          )
-        })
-      }
+      setLoading(false)
+      setImageNode(editor, id, { url: urls.get(id) })
       return
     }
 
@@ -120,19 +113,7 @@ export const ImageElement = (props) => {
           if (cancelled) return
 
           setError(null)
-          const [match] = Editor.nodes(editor, {
-            match: (node) => node.type === 'image' && node.id === id,
-            at: [],
-          })
-          if (match) {
-            HistoryEditor.withoutSaving(editor, () => {
-              Transforms.setNodes(
-                editor,
-                { file: null, url: data.url },
-                { at: match[1] }
-              )
-            })
-          }
+          setImageNode(editor, id, { url: data.url })
         })
         .catch((err) => {
           onImageUploadError?.(err)
@@ -156,7 +137,7 @@ export const ImageElement = (props) => {
     return () => {
       cancelled = true
     }
-  }, [id, url])
+  }, [id, url, file])
 
   return (
     <figure {...attributes}>
@@ -165,24 +146,54 @@ export const ImageElement = (props) => {
         contentEditable={false}
         style={{ textAlign: 'center', marginTop: 30 }}
       >
-        <img
-          onLoad={() => {
-            //
-          }}
-          onClick={(event) => {
-            event.preventDefault()
-            setCaptionShow(true)
-          }}
-          // TODO: where to revoke objectURL
-          src={url || window.URL.createObjectURL(file)}
-          alt={alt}
-          className={css`
-            display: inline-block;
-            width: 100%;
-            height: auto;
-            box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
-          `}
-        />
+        {file && (
+          <img
+            className={cx(
+              'placeholder',
+              css`
+                display: inline-block;
+                width: 100%;
+                height: auto;
+                box-shadow: ${selected && focused
+                  ? '0 0 0 3px #B4D5FF'
+                  : 'none'};
+              `
+            )}
+            src={objectURL}
+            alt={alt}
+            onClick={(event) => {
+              event.preventDefault()
+              setCaptionShow(true)
+            }}
+          />
+        )}
+        {url && (
+          <img
+            onLoad={() => {
+              // TEST
+              setTimeout(() => {
+                objectURL && window.URL.revokeObjectURL(objectURL)
+                setImageLoaded(true)
+                setImageNode(editor, id, { file: null })
+              }, 2000)
+            }}
+            onClick={(event) => {
+              event.preventDefault()
+              setCaptionShow(true)
+            }}
+            // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
+            src={url}
+            alt={alt}
+            className={css`
+              opacity: ${imageLoaded ? 1 : 0};
+              transition: opacity 0.3s;
+              display: inline-block;
+              width: 100%;
+              height: auto;
+              box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
+            `}
+          />
+        )}
         {loading && <span>loading...</span>}
         {error && <span style={{ color: 'red' }}>网络错误，稍后自动重试</span>}
         <figcaption
@@ -198,8 +209,7 @@ export const ImageElement = (props) => {
               caption={alt}
               onChange={(val) => {
                 setCaptionShow(true)
-                const path = ReactEditor.findPath(editor, element)
-                Transforms.setNodes(editor, { alt: val }, { at: path })
+                setImageNode(editor, id, { alt: val }, true)
               }}
               onEnter={() => {
                 setCaptionShow(false)
@@ -208,7 +218,6 @@ export const ImageElement = (props) => {
                 // TODO: last的实现貌似有BUG...可以提交issue
                 const [_, lastPath] = Editor.last(editor, path.slice(0, -1))
 
-                // TODO: ugly...
                 if (
                   Path.isParent(path, lastPath) ||
                   Path.equals(path, lastPath)
@@ -297,6 +306,22 @@ const CaptionInput = ({ caption, onChange, onEnter, ...rest }) => {
       }}
     />
   )
+}
+
+const setImageNode = (editor, id, props, saveHistory = false) => {
+  const [match] = Editor.nodes(editor, {
+    match: (node) => node.type === 'image' && node.id === id,
+    at: [],
+  })
+  if (match) {
+    if (saveHistory) {
+      Transforms.setNodes(editor, props, { at: match[1] })
+    } else {
+      HistoryEditor.withoutSaving(editor, () => {
+        Transforms.setNodes(editor, props, { at: match[1] })
+      })
+    }
+  }
 }
 
 const insertImage = (editor, file, url) => {

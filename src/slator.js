@@ -141,7 +141,7 @@ const Slator = (props) => {
           onMouseDown={(event) => {
             event.preventDefault()
             editor.undo()
-            console.log(editor.operations)
+            // console.log(editor.operations)
           }}
         >
           <Icon type="undo" />
@@ -152,7 +152,7 @@ const Slator = (props) => {
             onMouseDown={(event) => {
               event.preventDefault()
               editor.redo()
-              console.log(editor.operations)
+              // console.log(editor.operations)
             }}
           />
         </Button>
