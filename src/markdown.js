@@ -11,6 +11,8 @@ const SHORTCUTS = {
   // '+': 'list-item',
   '>': 'block-quote',
   '``': 'code-block',
+  '[]-': 'check-list',
+  '[x]-': 'check-list',
 }
 
 export const withMarkdownShortcuts = (editor) => {
@@ -29,15 +31,17 @@ export const withMarkdownShortcuts = (editor) => {
       const range = { anchor, focus: start }
       const beforeText = Editor.string(editor, range)
       const type = SHORTCUTS[beforeText]
+      const props = { type }
+
+      if (beforeText === '[]-') props.checked = false
+      if (beforeText === '[x]-') props.checked = true
 
       if (type) {
         Transforms.select(editor, range)
         Transforms.delete(editor)
-        Transforms.setNodes(
-          editor,
-          { type },
-          { match: (n) => Editor.isBlock(editor, n) }
-        )
+        Transforms.setNodes(editor, props, {
+          match: (n) => Editor.isBlock(editor, n),
+        })
 
         // TODO: 多重再回退时嵌套会有bug
         if (type === 'list-item') {
