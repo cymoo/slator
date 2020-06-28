@@ -35,7 +35,7 @@ const App = () => {
           imageUploadRequest={() => {
             return new Promise((resolve, reject) => {
               setTimeout(() => {
-                if (Math.random() > 0.3) {
+                if (Math.random() > 0.8) {
                   reject('timeout')
                 } else {
                   resolve({

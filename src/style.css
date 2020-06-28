@@ -343,30 +343,38 @@ img svg {
   font-weight: 400;
 }
 
-.editor hr {
-  margin: 4.5em auto;
-  width: 240px;
-  max-width: 100%;
-  border: none;
-  border-top: 1px solid #d3d3d3;
-}
+/*.editor .divider {*/
+/*  padding-top: 2.5em;*/
+/*  padding-bottom: 2.5em;*/
+/*}*/
 
 /*.editor hr {*/
-/*  margin-top: 30px;*/
+/*  margin-left: auto;*/
+/*  margin-right: auto;*/
+/*  width: 240px;*/
+/*  height: 60px;*/
+/*  max-width: 100%;*/
 /*  border: none;*/
-/*  color: rgb(117, 117, 117);*/
-/*  text-align: center;*/
+/*  border-top: 1px solid #d3d3d3;*/
 /*}*/
-/*.editor hr:before {*/
-/*  font-size: 27px;*/
-/*  line-height: 1;*/
-/*  font-weight: 400;*/
-/*  font-style: italic;*/
-/*  !*text-indent: 0.6em;*!*/
-/*  !*letter-spacing: 0.6em;*!*/
-/*  letter-spacing: 18px;*/
-/*  content: "...";*/
-/*}*/
+
+.editor hr {
+  margin-top: 50px;
+  margin-bottom: 15px;
+  border: none;
+  color: rgb(117, 117, 117);
+  text-align: center;
+}
+.editor hr:before {
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 400;
+  font-style: italic;
+  /*text-indent: 0.6em;*/
+  /*letter-spacing: 0.6em;*/
+  letter-spacing: 18px;
+  content: "...";
+}
 
 .editor a {
   /*background-position: 0 1.05em;*/

@@ -185,6 +185,36 @@ const Slator = (props) => {
           //   console.log(editor.operations)
           // }
         }}
+        // https://developer.mozilla.org/zh-CN/docs/Web/API/DataTransfer/setData
+        onDrop={(event) => {
+          // const imgId = event.dataTransfer.getData('text/html')
+          if (true) {
+            const [match] = Editor.nodes(editor, {
+              match: (node) => node.type === 'image',
+              at: [],
+            })
+            // const domPoint = window.getSelection().getRangeAt(0)
+            // console.log(domPoint)
+            // console.log(event)
+            // TODO: 搞清楚eventRange的原理
+            const range = ReactEditor.findEventRange(editor, event)
+            console.log(range)
+            console.log(range)
+            // console.log(slatePoint)
+            // console.log(editor.selection)
+            // TODO: to只能为path，得先删除再插入
+            // Transforms.moveNodes(editor, { at: match[1], to: range.anchor })
+            // Transforms.move(editor, range.anchor)
+            // TODO: 在某些情况下，会抛Error: Cannot get the start point in the node at path [8] because it has no start text node.
+            Transforms.removeNodes(editor, { at: match[1] })
+            Transforms.insertNodes(editor, match[0], { at: range })
+
+            Transforms.select(editor, range.anchor)
+            event.preventDefault()
+          }
+          // console.log(event.dataTransfer.items)
+          // console.log('dropped')
+        }}
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
         onMouseUp={(event) => {
           const selection = editor.selection

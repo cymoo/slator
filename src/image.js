@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
 import { Editor, Transforms, Path } from 'slate'
@@ -57,6 +57,7 @@ export const withImages = (editor) => {
 
 const urls = new Map()
 
+// TODO: drag image will crash
 export const ImageElement = (props) => {
   const {
     attributes,
@@ -68,6 +69,8 @@ export const ImageElement = (props) => {
     onImageUploadSuccess,
     onImageUploadError,
   } = props
+
+  // console.log(element)
 
   const editor = useEditor()
   const selected = useSelected()
@@ -83,6 +86,7 @@ export const ImageElement = (props) => {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const ref = useClickAway(() => setCaptionShow(false))
+  const imgRef = useRef()
 
   const { file, url, alt, id } = element
   const objectURL = useMemo(
@@ -154,6 +158,7 @@ export const ImageElement = (props) => {
                 display: inline-block;
                 width: 100%;
                 height: auto;
+                // cursor: move;
                 box-shadow: ${selected && focused
                   ? '0 0 0 3px #B4D5FF'
                   : 'none'};
@@ -169,17 +174,32 @@ export const ImageElement = (props) => {
         )}
         {url && (
           <img
+            ref={imgRef}
             onLoad={() => {
               // TEST
               setTimeout(() => {
                 objectURL && window.URL.revokeObjectURL(objectURL)
                 setImageLoaded(true)
                 setImageNode(editor, id, { file: null })
-              }, 2000)
+              }, 10)
             }}
             onClick={(event) => {
               event.preventDefault()
               setCaptionShow(true)
+            }}
+            onDragStart={(event) => {
+              console.log('drag start')
+              // console.log(id)
+              event.dataTransfer.setData('text/plain', 'abc123A')
+              event.dataTransfer.setDragImage(imgRef.current, 0, 0)
+              // event.dataTransfer.setData('text', 'foo')
+            }}
+            onDrag={(event) => {
+              // console.log('dragging')
+            }}
+            onDragEnd={(event) => {
+              // console.log('drag end')
+              // event.preventDefault()
             }}
             // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
             src={url}
@@ -190,6 +210,7 @@ export const ImageElement = (props) => {
               display: inline-block;
               width: 100%;
               height: auto;
+              cursor: move;
               box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
             `}
           />

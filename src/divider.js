@@ -1,7 +1,8 @@
 import React from 'react'
-import { Editor } from 'slate'
-import { useSlate } from 'slate-react'
+import { Editor, Transforms } from 'slate'
+import { useSlate, useSelected, useFocused } from 'slate-react'
 import { Button, Icon } from './components'
+import { css } from 'emotion'
 
 export const withDivider = (editor) => {
   const { isVoid } = editor
@@ -14,13 +15,15 @@ export const withDivider = (editor) => {
 }
 
 export const DividerElement = (props) => {
+  const selected = useSelected()
+  const focused = useFocused()
   return (
-    <div
-      {...props.attribute}
-      contentEditable={false}
-      style={{ userSelect: 'None' }}
-    >
-      <hr />
+    <div {...props.attribute} contentEditable={false}>
+      <hr
+        className={css`
+          box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
+        `}
+      />
       {props.children}
     </div>
   )
@@ -35,10 +38,11 @@ export const DividerButton = () => {
         event.preventDefault()
         Editor.insertNode(editor, { type: 'divider', children: [{ text: '' }] })
         // TODO: 如果是最后一个元素时，插入一个段落，否则光标移至下一个block element
-        Editor.insertNode(editor, {
-          type: 'paragraph',
-          children: [{ text: '' }],
-        })
+        Transforms.move(editor)
+        // Editor.insertNode(editor, {
+        //   type: 'paragraph',
+        //   children: [{ text: '' }],
+        // })
       }}
     >
       <Icon type="minus" />
