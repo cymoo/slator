@@ -5,49 +5,55 @@ import { useClickAway } from '../src/utils'
 import QuillEditor from './QuillEditor'
 // import './index.css'
 
+class ErrorCatcher extends React.Component {
+  componentDidCatch(error, errorInfo) {
+    alert(error)
+  }
+
+  render() {
+    return this.props.children
+  }
+}
+
 const App = () => {
   const [value, setValue] = useState(initialValue)
   return (
     <div
       className={css`
+        position: relative;
         margin-top: 30px;
         margin-left: auto;
         margin-right: auto;
         max-width: 1000px;
       `}
     >
-      {/* <input*/}
-      {/*  type="text"*/}
-      {/*  placeholder="write here..."*/}
-      {/*  value={value}*/}
-      {/*  onChange={(event) => setValue(event.target.value)}*/}
-      {/* />*/}
-      {/* <hr />*/}
-      <Slator
-        // readOnly
-        value={value}
-        onChange={(value) => setValue(value)}
-        imageUploadRequest={() => {
-          return new Promise((resolve, reject) => {
-            setTimeout(() => {
-              if (Math.random() > 0.3) {
-                reject('timeout')
-              } else {
-                resolve({
-                  url:
-                    'https://cn.bing.com/th?id=OHR.GorchFock_EN-CN2672694129_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
-                })
-              }
-            }, 3000)
-          })
-        }}
-        onImageUploadSuccess={() => {
-          // console.log('image has been upload to server')
-        }}
-        onImageUploadError={() => {
-          // console.log('image upload error')
-        }}
-      />
+      <ErrorCatcher>
+        <Slator
+          // readOnly
+          value={value}
+          onChange={(value) => setValue(value)}
+          imageUploadRequest={() => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                if (Math.random() > 0.3) {
+                  reject('timeout')
+                } else {
+                  resolve({
+                    url:
+                      'https://cn.bing.com/th?id=OHR.GorchFock_EN-CN2672694129_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
+                  })
+                }
+              }, 3000)
+            })
+          }}
+          onImageUploadSuccess={() => {
+            // console.log('image has been upload to server')
+          }}
+          onImageUploadError={() => {
+            // console.log('image upload error')
+          }}
+        />
+      </ErrorCatcher>
       {/* <hr />*/}
       {/* <QuillEditor*/}
       {/*  onChange={(value) => {*/}
@@ -279,6 +285,22 @@ const initialValue = [
     type: 'code-block',
     children: [{ text: 'def foo():\n    print("hello world")\n' }],
   },
+  {
+    type: 'check-list',
+    checked: false,
+    children: [{ text: 'Learn AI' }],
+  },
+  {
+    type: 'check-list',
+    checked: true,
+    children: [{ text: 'Learn React and web' }],
+  },
+  {
+    type: 'check-list',
+    checked: false,
+    children: [{ text: 'Learn compiler technique' }],
+  },
+  { type: 'paragraph', children: [{ text: 'Keep calm and carry on!' }] },
 ]
 
 export default App

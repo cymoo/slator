@@ -14,6 +14,7 @@ import { withLinks, LinkButton, LinkElement } from './link'
 import { withImages, ImageButton, ImageElement } from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
+import { withCheckList, CheckListButton, CheckListElement } from './checklist'
 import './style.css'
 
 const HOTKEYS = {
@@ -118,6 +119,7 @@ const Slator = (props) => {
 
         <BlockButton format="numbered-list" icon="list-numbered" />
         <BlockButton format="bulleted-list" icon="list-bulleted" />
+        <CheckListButton />
         <LinkButton />
         <ImageButton />
 
@@ -311,6 +313,8 @@ const Element = (props) => {
       return <ImageElement {...props} />
     case 'link':
       return <LinkElement {...props} />
+    case 'check-list':
+      return <CheckListElement {...props} />
     case 'divider':
       return <DividerElement {...props} />
     case 'code-block':

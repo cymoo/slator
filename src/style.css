@@ -30,6 +30,13 @@ img svg {
   stroke-width:0;
 }
 
+.editor {
+  /*font-size: 21px;*/
+  font-size: 16px;
+  font-weight: 400;
+  box-sizing: border-box;
+}
+
 @media (min-width: 1080px) {
   .editor p {
     margin-top: 2em;
@@ -219,13 +226,6 @@ img svg {
 }
 
 
-.editor {
-  /*font-size: 21px;*/
-  font-size: 16px;
-  font-weight: 400;
-  box-sizing: border-box;
-}
-
 .editor p {
   color: rgb(41, 41, 41);
   letter-spacing: -0.003em;
@@ -315,11 +315,32 @@ img svg {
   color: rgba(41, 41, 41, 1);
   font-weight: 400;
 }
+
 .editor ul li {
   list-style-type: disc;
 }
+
 .editor ol li {
   list-style-type: decimal;
+}
+
+.editor .check-list {
+  font-size: 21px;
+}
+
+.editor .check-list-btn {
+  /*font-size: 20px;*/
+}
+
+.editor .check-list-item {
+  padding-left: 0;
+  margin-left: 30px;
+  /*margin-bottom: -0.46em;*/
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  /*letter-spacing: -0.003em;*/
+  line-height: 1.58;
+  color: rgba(41, 41, 41, 1);
+  font-weight: 400;
 }
 
 .editor hr {
