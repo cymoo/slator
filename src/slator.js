@@ -16,6 +16,7 @@ import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
 import './style.css'
+import 'animate.css/animate.css'
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -60,8 +61,11 @@ const Slator = (props) => {
       withHistory(
         withPasteHtml(
           withMarkdownShortcuts(
-            withDivider(
-              withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+            // TODO: 好像没必须要withCheckList
+            withCheckList(
+              withDivider(
+                withImages(withLinks(withCodeBlock(withReact(createEditor()))))
+              )
             )
           )
         )

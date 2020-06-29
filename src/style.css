@@ -6,6 +6,30 @@
   box-sizing: inherit;
 }
 
+@keyframes shift-rightwards {
+  0% { transform: translateX(0%) }
+  40% { transform: translateX(40%) }
+  60% { transform: translateX(60%) }
+  100% { transform: translateX(100%) }
+}
+
+.LoadingBar {
+  position: absolute;
+  display: none;
+  bottom: 27px;
+  left: 0;
+  width: 50%;
+  height: 2px;
+  z-index: 999;
+  background-color: #03a87c;
+  transform: translateX(100%);
+}
+.LoadingBar.active {
+  display: block;
+  animation: shift-rightwards 0.5s ease-in-out infinite;
+  animation-delay: .5s;
+}
+
 h1, h2, h3, h4, h5, h6, dl, dd, ol, ul, menu, figure, blockquote, p, pre, form {
   margin: 0;
 }

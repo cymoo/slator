@@ -26,6 +26,8 @@
   "dependencies": {
     "@mdi/js": "^5.3.45",
     "@mdi/react": "^1.4.0",
+    "animate.css": "^4.1.0",
+    "classnames": "^2.2.6",
     "emotion": "^10.0.27",
     "highlight.js": "^10.1.0",
     "image-extensions": "^1.1.0",

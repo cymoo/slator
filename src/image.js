@@ -13,8 +13,12 @@ import {
 import { randomString } from './utils'
 import { HistoryEditor } from 'slate-history'
 
-import { Button, Icon } from './components'
+import { Button, Icon, LoadingBar } from './components'
 import { css, cx } from 'emotion'
+import has from 'lodash/has'
+import _ from 'lodash'
+
+window._ = _
 
 export const withImages = (editor) => {
   const { insertData, isVoid, insertBreak } = editor
@@ -148,7 +152,7 @@ export const ImageElement = (props) => {
       <div
         ref={ref}
         contentEditable={false}
-        style={{ textAlign: 'center', marginTop: 30 }}
+        style={{ textAlign: 'center', marginTop: 30, position: 'relative' }}
       >
         {file && (
           <img
@@ -180,7 +184,7 @@ export const ImageElement = (props) => {
               setTimeout(() => {
                 objectURL && window.URL.revokeObjectURL(objectURL)
                 setImageLoaded(true)
-                setImageNode(editor, id, { file: null })
+                setImageNode(editor, id, { file: undefined })
               }, 10)
             }}
             onClick={(event) => {
@@ -202,18 +206,23 @@ export const ImageElement = (props) => {
             // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
             src={url}
             alt={alt}
-            className={css`
-              opacity: ${imageLoaded ? 1 : 0};
-              transition: opacity 0.3s;
-              display: inline-block;
-              width: 100%;
+            className={cx(
+              // has(element, 'file') ? 'animate__animated animate__pulse' : '',
+              'animate__animated animate__pulse',
+              css`
+              // opacity: ${imageLoaded ? 1 : 0};
+              // transition: opacity 0.3s;
+              // display: inline-block;
+              display: ${imageLoaded ? 'inline-block' : 'none'};
+              max-width: 100%;
               height: auto;
               cursor: move;
               box-shadow: ${selected && focused ? '0 0 0 3px #B4D5FF' : 'none'};
-            `}
+            `
+            )}
           />
         )}
-        {loading && <span>loading...</span>}
+        {loading && <LoadingBar />}
         {error && <span style={{ color: 'red' }}>网络错误，稍后自动重试</span>}
         <figcaption
           style={{
@@ -343,13 +352,11 @@ const setImageNode = (editor, id, props, saveHistory = false) => {
   }
 }
 
-const insertImage = (editor, file, url) => {
+const insertImage = (editor, file, url, alt = '') => {
   const img = {
     type: 'image',
     id: randomString(),
-    url: '',
-    file: null,
-    alt: '',
+    alt,
     children: [{ text: '' }],
   }
   if (url) img.url = url

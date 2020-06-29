@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
+import classnames from 'classnames'
 import { cx, css } from 'emotion'
 import icons from './icons.svg'
 // import MDIcon from '@mdi/react'
@@ -310,6 +311,22 @@ export const TooltipInput = (props) => {
       />
     </Tooltip>
   )
+}
+
+export const LoadingBar = (props) => {
+  const { className, style, active, ...rest } = props
+
+  const clsString = classnames(
+    'LoadingBar',
+    active ? 'active' : null,
+    className
+  )
+
+  return <div className={clsString} style={style} {...rest} />
+}
+
+LoadingBar.defaultProps = {
+  active: true,
 }
 
 TooltipInput.defaultProps = {
