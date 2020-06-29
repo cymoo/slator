@@ -273,6 +273,7 @@ const initialValue = [
   {
     type: 'image',
     alt: '一定要去这个地方',
+    id: '123',
     url:
       'https://cn.bing.com/th?id=OHR.RhodesIsland_EN-CN2167254194_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
     children: [{ text: '' }],

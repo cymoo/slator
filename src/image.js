@@ -188,11 +188,9 @@ export const ImageElement = (props) => {
               setCaptionShow(true)
             }}
             onDragStart={(event) => {
-              console.log('drag start')
-              // console.log(id)
-              event.dataTransfer.setData('text/plain', 'abc123A')
+              // COMPAT: 不要将type设为text or text/plain，因为第一次接受的时候chrome会输出\n\n
+              event.dataTransfer.setData('image-id', id)
               event.dataTransfer.setDragImage(imgRef.current, 0, 0)
-              // event.dataTransfer.setData('text', 'foo')
             }}
             onDrag={(event) => {
               // console.log('dragging')
