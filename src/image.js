@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
 import { Editor, Transforms, Path } from 'slate'
@@ -12,13 +12,10 @@ import {
 } from 'slate-react'
 import { randomString } from './utils'
 import { HistoryEditor } from 'slate-history'
+import { imageValidator } from './slator'
 
 import { Button, Icon, LoadingBar } from './components'
 import { css, cx } from 'emotion'
-import has from 'lodash/has'
-import _ from 'lodash'
-
-window._ = _
 
 export const withImages = (editor) => {
   const { insertData, isVoid, insertBreak } = editor
@@ -61,15 +58,12 @@ export const withImages = (editor) => {
 
 const urls = new Map()
 
-// TODO: drag image will crash
 export const ImageElement = (props) => {
   const {
     attributes,
     children,
     element,
     imageUploadRequest,
-    imageRetryDelay,
-    imageRetryCount,
     onImageUploadSuccess,
     onImageUploadError,
   } = props
@@ -98,6 +92,39 @@ export const ImageElement = (props) => {
     [file]
   )
 
+  let cancelled = false
+  const uploadImage = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    imageUploadRequest(file)
+      .then((data) => {
+        urls.set(id, data.url)
+        onImageUploadSuccess?.(data)
+        if (cancelled) return
+
+        setError(null)
+        setImageNode(editor, id, { url: data.url })
+      })
+      .catch((err) => {
+        onImageUploadError?.(err)
+        if (!cancelled) {
+          setError(err)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      })
+  }, [
+    imageUploadRequest,
+    file,
+    id,
+    cancelled,
+    onImageUploadSuccess,
+    onImageUploadError,
+  ])
+
   useEffect(() => {
     if (url) return
     if (!file) return
@@ -108,44 +135,12 @@ export const ImageElement = (props) => {
       return
     }
 
-    let cancelled = false
-    let count = imageRetryCount
-
-    const uploadImage = () => {
-      setLoading(true)
-      setError(null)
-      imageUploadRequest(file)
-        .then((data) => {
-          urls.set(id, data.url)
-          onImageUploadSuccess?.(data)
-          if (cancelled) return
-
-          setError(null)
-          setImageNode(editor, id, { url: data.url })
-        })
-        .catch((err) => {
-          onImageUploadError?.(err)
-          if (!cancelled) {
-            setError(err)
-            if (count > 0) {
-              setTimeout(() => uploadImage(), imageRetryDelay * 1000)
-              count -= 1
-            }
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setLoading(false)
-          }
-        })
-    }
-
     uploadImage()
 
     return () => {
       cancelled = true
     }
-  }, [id, url, file])
+  }, [id, url, file, uploadImage])
 
   return (
     <figure {...attributes}>
@@ -193,8 +188,8 @@ export const ImageElement = (props) => {
             }}
             onDragStart={(event) => {
               // COMPAT: 不要将type设为text or text/plain，因为第一次接受的时候chrome会输出\n\n
+              // event.dataTransfer.setDragImage(el, 0, 0)
               event.dataTransfer.setData('image-id', id)
-              event.dataTransfer.setDragImage(imgRef.current, 0, 0)
             }}
             onDrag={(event) => {
               // console.log('dragging')
@@ -207,8 +202,6 @@ export const ImageElement = (props) => {
             src={url}
             alt={alt}
             className={cx(
-              // has(element, 'file') ? 'animate__animated animate__pulse' : '',
-              'animate__animated animate__pulse',
               css`
               // opacity: ${imageLoaded ? 1 : 0};
               // transition: opacity 0.3s;
@@ -223,7 +216,8 @@ export const ImageElement = (props) => {
           />
         )}
         {loading && <LoadingBar />}
-        {error && <span style={{ color: 'red' }}>网络错误，稍后自动重试</span>}
+        {error && <ErrorMask onError={uploadImage} />}
+        {/* {error && <span style={{ color: 'red' }}>网络错误，稍后自动重试</span>}*/}
         <figcaption
           style={{
             opacity: !captionShow && alt === '' ? 0 : 1,
@@ -336,6 +330,51 @@ const CaptionInput = ({ caption, onChange, onEnter, ...rest }) => {
   )
 }
 
+const ErrorMask = (props) => {
+  return (
+    <div
+      className={css`
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 27px;
+        background-color: rgba(255, 255, 255, 0.83);
+      `}
+    >
+      <div>
+        <p
+          className={css`
+            padding-bottom: 15px;
+            color: red !important;
+          `}
+        >
+          上传出错
+        </p>
+        <button
+          className={css`
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            color: #333;
+          `}
+          onClick={(event) => {
+            event.preventDefault()
+            props.onError()
+          }}
+        >
+          重试
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const setImageNode = (editor, id, props, saveHistory = false) => {
   const [match] = Editor.nodes(editor, {
     match: (node) => node.type === 'image' && node.id === id,
@@ -360,7 +399,13 @@ const insertImage = (editor, file, url, alt = '') => {
     children: [{ text: '' }],
   }
   if (url) img.url = url
-  if (file) img.file = file
+  if (file) {
+    if (!isValidImage(file)) {
+      return
+    } else {
+      img.file = file
+    }
+  }
   Transforms.insertNodes(editor, img)
 }
 
@@ -371,10 +416,23 @@ const isImageUrl = (url) => {
   return imageExtensions.includes(ext)
 }
 
-const isValidImageFile = (file) => {
+const isValidImage = (file) => {
   const { size, type } = file
-  return (
-    size <= 1024 * 1024 * 5 &&
-    ['png', 'jpeg', 'jpg', 'gif'].includes(type.split('/').pop())
-  )
+  const {
+    maxImageSize,
+    onImageExceedMaxSize,
+    allowedImageTypes,
+    onInvalidImageTypes,
+  } = imageValidator
+
+  let valid = true
+  if (size >= maxImageSize) {
+    valid = false
+    onImageExceedMaxSize?.(file)
+  }
+  if (!allowedImageTypes.includes(type.split('/').pop())) {
+    valid = false
+    onInvalidImageTypes?.(file)
+  }
+  return valid
 }

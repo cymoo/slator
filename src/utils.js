@@ -50,3 +50,12 @@ export const useClickAway = (onClickAway, dom) => {
 
   return element
 }
+
+export const assignIfNotUndefined = (obj1, obj2) => {
+  for (const [k, v] of Object.entries(obj2)) {
+    if (v !== undefined) {
+      obj1[k] = v
+    }
+  }
+  return obj1
+}

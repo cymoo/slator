@@ -52,6 +52,8 @@ const App = () => {
           onImageUploadError={() => {
             // console.log('image upload error')
           }}
+          allowedImageTypes="png gif"
+          onInvalidImageTypes={() => alert('wrong image type')}
         />
       </ErrorCatcher>
       {/* <hr />*/}

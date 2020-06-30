@@ -15,8 +15,13 @@ import { withImages, ImageButton, ImageElement } from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
+import { assignIfNotUndefined } from './utils'
 import './style.css'
 import 'animate.css/animate.css'
+
+import _ from 'lodash'
+
+window._ = _
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -26,6 +31,13 @@ const HOTKEYS = {
 }
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
+
+const imageValidator = {
+  maxImageSize: 1024 * 1024 * 5,
+  onImageExceedMaxSize: () => {},
+  allowedImageTypes: ['png', 'jpg', 'jpeg', 'gif'],
+  onInvalidImageTypes: () => {},
+}
 
 const Slator = (props) => {
   const {
@@ -37,11 +49,19 @@ const Slator = (props) => {
     imageUploadRequest,
     onImageUploadSuccess,
     onImageUploadError,
-    imageRetryDelay,
-    imageRetryCount,
+    maxImageSize,
+    onImageExceedMaxSize,
+    allowedImageTypes,
+    onInvalidImageTypes,
   } = props
 
-  // const [value, setValue] = useState(initialValue)
+  assignIfNotUndefined(imageValidator, {
+    maxImageSize,
+    onImageExceedMaxSize,
+    allowedImageTypes,
+    onInvalidImageTypes,
+  })
+
   const renderElement = useCallback(
     (props) => (
       <Element
@@ -49,8 +69,6 @@ const Slator = (props) => {
         imageUploadRequest={imageUploadRequest}
         onImageUploadSuccess={onImageUploadSuccess}
         onImageUploadError={onImageUploadError}
-        imageRetryDelay={imageRetryDelay}
-        imageRetryCount={imageRetryCount}
       />
     ),
     [imageUploadRequest, onImageUploadSuccess, onImageUploadSuccess]
@@ -548,3 +566,4 @@ const IndentButton = ({ format, icon }) => {
 }
 
 export default Slator
+export { imageValidator }
