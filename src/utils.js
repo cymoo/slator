@@ -59,3 +59,25 @@ export const assignIfNotUndefined = (obj1, obj2) => {
   }
   return obj1
 }
+
+export const imageValidator = {
+  maxImageSize: 1024 * 1024 * 5,
+  onImageExceedMaxSize: () => {},
+
+  allowedImageTypes: 'png jpg jpeg gif',
+  onInvalidImageTypes: () => {},
+
+  isValid(file) {
+    const { size, type } = file
+    let valid = true
+    if (size >= this.maxImageSize) {
+      valid = false
+      this.onImageExceedMaxSize(file)
+    }
+    if (!this.allowedImageTypes.includes(type.split('/').pop())) {
+      valid = false
+      this.onInvalidImageTypes(file)
+    }
+    return valid
+  },
+}

@@ -15,7 +15,7 @@ import { withImages, ImageButton, ImageElement } from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
-import { assignIfNotUndefined } from './utils'
+import { assignIfNotUndefined, imageValidator } from './utils'
 import './style.css'
 import 'animate.css/animate.css'
 
@@ -31,13 +31,6 @@ const HOTKEYS = {
 }
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
-
-const imageValidator = {
-  maxImageSize: 1024 * 1024 * 5,
-  onImageExceedMaxSize: () => {},
-  allowedImageTypes: ['png', 'jpg', 'jpeg', 'gif'],
-  onInvalidImageTypes: () => {},
-}
 
 const Slator = (props) => {
   const {

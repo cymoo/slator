@@ -10,9 +10,8 @@ import {
   ReactEditor,
   useReadOnly,
 } from 'slate-react'
-import { randomString } from './utils'
+import { randomString, imageValidator } from './utils'
 import { HistoryEditor } from 'slate-history'
-import { imageValidator } from './slator'
 
 import { Button, Icon, LoadingBar } from './components'
 import { css, cx } from 'emotion'
@@ -400,7 +399,7 @@ const insertImage = (editor, file, url, alt = '') => {
   }
   if (url) img.url = url
   if (file) {
-    if (!isValidImage(file)) {
+    if (!imageValidator.isValid(file)) {
       return
     } else {
       img.file = file
@@ -414,25 +413,4 @@ const isImageUrl = (url) => {
   if (!isUrl(url)) return false
   const ext = new URL(url).pathname.split('.').pop()
   return imageExtensions.includes(ext)
-}
-
-const isValidImage = (file) => {
-  const { size, type } = file
-  const {
-    maxImageSize,
-    onImageExceedMaxSize,
-    allowedImageTypes,
-    onInvalidImageTypes,
-  } = imageValidator
-
-  let valid = true
-  if (size >= maxImageSize) {
-    valid = false
-    onImageExceedMaxSize?.(file)
-  }
-  if (!allowedImageTypes.includes(type.split('/').pop())) {
-    valid = false
-    onInvalidImageTypes?.(file)
-  }
-  return valid
 }
