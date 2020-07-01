@@ -64,10 +64,41 @@ export const ImageElementReadOnly = (props) => {
 
   useLayoutEffect(() => {
     const el = placeholder.current
+    if (!width || !height) return
+
     const realWidth = el.getBoundingClientRect().width
     const realHeight = (realWidth / width) * height
     el.style.height = `${realHeight}px`
   }, [])
+
+  let placeholderStyle = {}
+  let imageStyle = {
+    display: 'inline-block',
+    maxWidth: '100%',
+    width: `${width}px`,
+    height: 'auto',
+    overflow: 'hidden',
+  }
+
+  if (width && height) {
+    placeholderStyle = {
+      display: 'inline-block',
+      position: 'relative',
+      maxWidth: '100%',
+      width: `${width}px`,
+      backgroundColor: 'rgba(242, 242, 242, 1)',
+    }
+    imageStyle = {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '100%',
+      opacity: imageLoaded ? 1 : 0,
+      transition: 'opacity 0.3s ease-in',
+      overflow: 'hidden',
+    }
+  }
 
   return (
     <figure {...attributes}>
@@ -75,41 +106,16 @@ export const ImageElementReadOnly = (props) => {
         contentEditable={false}
         style={{ textAlign: 'center', marginTop: 30, position: 'relative' }}
       >
-        <div
-          ref={placeholder}
-          className={cx(
-            'image-placeholder',
-            css`
-              display: inline-block;
-              position: relative;
-              max-width: 100%;
-              width: ${width}px;
-              background-color: rgba(242, 242, 242, 1);
-            `
-          )}
-        >
+        <div ref={placeholder} style={placeholderStyle}>
           <img
             onLoad={(event) => {
               setTimeout(() => {
                 setImageLoaded(true)
-              }, 2000)
+              }, 1000)
             }}
             src={url}
             alt={alt}
-            className={cx(
-              css`
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                opacity: ${imageLoaded ? 1 : 0};
-                transition: opacity 0.3s;
-                display: inline-block;
-                max-width: 100%;
-                height: auto;
-              `
-            )}
+            style={imageStyle}
           />
         </div>
         {alt && <figcaption>{alt}</figcaption>}

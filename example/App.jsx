@@ -280,6 +280,7 @@ const initialValue = [
     id: '123',
     width: 3840,
     height: 2160,
+    // height: 0,
     // width: 768,
     // height: 432,
     url:
