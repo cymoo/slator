@@ -29,7 +29,7 @@ const App = () => {
     >
       <ErrorCatcher>
         <Slator
-          // readOnly
+          readOnly
           value={value}
           onChange={(value) => setValue(value)}
           imageUploadRequest={() => {
@@ -52,8 +52,10 @@ const App = () => {
           onImageUploadError={() => {
             // console.log('image upload error')
           }}
-          allowedImageTypes="png gif"
-          onInvalidImageTypes={() => alert('wrong image type')}
+          allowedImageTypes="png gif jpg jpeg"
+          onInvalidImageTypes={(file) => {
+            alert('wrong image type')
+          }}
         />
       </ErrorCatcher>
       {/* <hr />*/}
@@ -276,6 +278,10 @@ const initialValue = [
     type: 'image',
     alt: '一定要去这个地方',
     id: '123',
+    width: 3840,
+    height: 2160,
+    // width: 768,
+    // height: 432,
     url:
       'https://cn.bing.com/th?id=OHR.RhodesIsland_EN-CN2167254194_UHD.jpg&pid=hp&w=3840&h=2160&rs=1&c=4&r=0',
     children: [{ text: '' }],

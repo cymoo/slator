@@ -74,7 +74,7 @@ export const imageValidator = {
       valid = false
       this.onImageExceedMaxSize(file)
     }
-    if (!this.allowedImageTypes.includes(type.split('/').pop())) {
+    if (!this.allowedImageTypes.includes(type.split('/').pop().toLowerCase())) {
       valid = false
       this.onInvalidImageTypes(file)
     }

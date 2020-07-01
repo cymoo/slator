@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
 import { Editor, Transforms, Path } from 'slate'
 import { useClickAway } from './utils'
-import {
-  useEditor,
-  useFocused,
-  useSelected,
-  ReactEditor,
-  useReadOnly,
-} from 'slate-react'
+import { useEditor, useFocused, useSelected, ReactEditor } from 'slate-react'
 import { randomString, imageValidator } from './utils'
 import { HistoryEditor } from 'slate-history'
 
@@ -55,6 +56,69 @@ export const withImages = (editor) => {
   return editor
 }
 
+export const ImageElementReadOnly = (props) => {
+  const { attributes, children, element } = props
+  const { url, alt, width, height } = element
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const placeholder = useRef()
+
+  useLayoutEffect(() => {
+    const el = placeholder.current
+    const realWidth = el.getBoundingClientRect().width
+    const realHeight = (realWidth / width) * height
+    el.style.height = `${realHeight}px`
+  }, [])
+
+  return (
+    <figure {...attributes}>
+      <div
+        contentEditable={false}
+        style={{ textAlign: 'center', marginTop: 30, position: 'relative' }}
+      >
+        <div
+          ref={placeholder}
+          className={cx(
+            'image-placeholder',
+            css`
+              display: inline-block;
+              position: relative;
+              max-width: 100%;
+              width: ${width}px;
+              background-color: rgba(242, 242, 242, 1);
+            `
+          )}
+        >
+          <img
+            onLoad={(event) => {
+              setTimeout(() => {
+                setImageLoaded(true)
+              }, 2000)
+            }}
+            src={url}
+            alt={alt}
+            className={cx(
+              css`
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                opacity: ${imageLoaded ? 1 : 0};
+                transition: opacity 0.3s;
+                display: inline-block;
+                max-width: 100%;
+                height: auto;
+              `
+            )}
+          />
+        </div>
+        {alt && <figcaption>{alt}</figcaption>}
+      </div>
+      {children}
+    </figure>
+  )
+}
+
 const urls = new Map()
 
 export const ImageElement = (props) => {
@@ -67,12 +131,9 @@ export const ImageElement = (props) => {
     onImageUploadError,
   } = props
 
-  // console.log(element)
-
   const editor = useEditor()
   const selected = useSelected()
   const focused = useFocused()
-  const readOnly = useReadOnly()
 
   const [captionShow, setCaptionShow] = useState(true)
 
@@ -83,6 +144,7 @@ export const ImageElement = (props) => {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const ref = useClickAway(() => setCaptionShow(false))
+  const localImgRef = useRef()
   const imgRef = useRef()
 
   const { file, url, alt, id } = element
@@ -102,7 +164,12 @@ export const ImageElement = (props) => {
         if (cancelled) return
 
         setError(null)
-        setImageNode(editor, id, { url: data.url })
+        const el = localImgRef.current
+        setImageNode(editor, id, {
+          url: data.url,
+          width: el.naturalWidth,
+          height: el.naturalHeight,
+        })
       })
       .catch((err) => {
         onImageUploadError?.(err)
@@ -130,7 +197,15 @@ export const ImageElement = (props) => {
 
     if (urls.has(id)) {
       setLoading(false)
-      setImageNode(editor, id, { url: urls.get(id) })
+      // TODO: 不用setTimeout，则naturalWidth和height为0，why?
+      setTimeout(() => {
+        const el = localImgRef.current
+        setImageNode(editor, id, {
+          url: urls.get(id),
+          width: el.naturalWidth,
+          height: el.naturalHeight,
+        })
+      })
       return
     }
 
@@ -150,6 +225,7 @@ export const ImageElement = (props) => {
       >
         {file && (
           <img
+            ref={localImgRef}
             className={cx(
               'placeholder',
               css`
@@ -174,12 +250,16 @@ export const ImageElement = (props) => {
           <img
             ref={imgRef}
             onLoad={() => {
-              // TEST
-              setTimeout(() => {
-                objectURL && window.URL.revokeObjectURL(objectURL)
-                setImageLoaded(true)
-                setImageNode(editor, id, { file: undefined })
-              }, 10)
+              objectURL && window.URL.revokeObjectURL(objectURL)
+              setImageLoaded(true)
+
+              const { width, height } = element
+              const props = { file: undefined }
+              if (width === undefined || height === undefined) {
+                props.width = imgRef.current.naturalWidth
+                props.height = imgRef.current.naturalHeight
+              }
+              setImageNode(editor, id, props)
             }}
             onClick={(event) => {
               event.preventDefault()
@@ -191,10 +271,9 @@ export const ImageElement = (props) => {
               event.dataTransfer.setData('image-id', id)
             }}
             onDrag={(event) => {
-              // console.log('dragging')
+              //
             }}
             onDragEnd={(event) => {
-              // console.log('drag end')
               // event.preventDefault()
             }}
             // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
@@ -223,45 +302,41 @@ export const ImageElement = (props) => {
             transition: 'opacity 0.13s ease-in-out',
           }}
         >
-          {readOnly ? (
-            alt
-          ) : (
-            <CaptionInput
-              caption={alt}
-              onChange={(val) => {
-                setCaptionShow(true)
-                setImageNode(editor, id, { alt: val }, true)
-              }}
-              onEnter={() => {
-                setCaptionShow(false)
-                // https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLElement/focus
-                const path = ReactEditor.findPath(editor, element)
-                // TODO: last的实现貌似有BUG...可以提交issue
-                const [_, lastPath] = Editor.last(editor, path.slice(0, -1))
+          <CaptionInput
+            caption={alt}
+            onChange={(val) => {
+              setCaptionShow(true)
+              setImageNode(editor, id, { alt: val }, true)
+            }}
+            onEnter={() => {
+              setCaptionShow(false)
+              // https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLElement/focus
+              const path = ReactEditor.findPath(editor, element)
+              // TODO: last的实现貌似有BUG...可以提交issue
+              const [_, lastPath] = Editor.last(editor, path.slice(0, -1))
 
-                if (
-                  Path.isParent(path, lastPath) ||
-                  Path.equals(path, lastPath)
-                ) {
-                  Transforms.insertNodes(
-                    editor,
-                    {
-                      type: 'paragraph',
-                      children: [{ text: '' }],
-                    },
-                    // TODO: void元素的end是啥?
-                    { at: Editor.end(editor, path) }
-                  )
-                  Transforms.move(editor)
-                } else {
-                  const start = Editor.start(editor, Path.next(path))
-                  Transforms.move(editor, start)
-                }
-                const root = ReactEditor.toDOMNode(editor, editor)
-                root.focus({ preventScroll: true })
-              }}
-            />
-          )}
+              if (
+                Path.isParent(path, lastPath) ||
+                Path.equals(path, lastPath)
+              ) {
+                Transforms.insertNodes(
+                  editor,
+                  {
+                    type: 'paragraph',
+                    children: [{ text: '' }],
+                  },
+                  // TODO: void元素的end是啥?
+                  { at: Editor.end(editor, path) }
+                )
+                Transforms.move(editor)
+              } else {
+                const start = Editor.start(editor, Path.next(path))
+                Transforms.move(editor, start)
+              }
+              const root = ReactEditor.toDOMNode(editor, editor)
+              root.focus({ preventScroll: true })
+            }}
+          />
         </figcaption>
       </div>
       {children}
@@ -341,7 +416,7 @@ const ErrorMask = (props) => {
         right: 0;
         top: 0;
         bottom: 27px;
-        background-color: rgba(255, 255, 255, 0.83);
+        background-color: rgba(255, 255, 255, 0.63);
       `}
     >
       <div>
@@ -390,7 +465,7 @@ const setImageNode = (editor, id, props, saveHistory = false) => {
   }
 }
 
-const insertImage = (editor, file, url, alt = '') => {
+const insertImage = (editor, file, url, alt = '', el = null) => {
   const img = {
     type: 'image',
     id: randomString(),

@@ -2,7 +2,14 @@ import React, { useCallback, useMemo, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
 import HotKeys from './hotkeys'
-import { Editable, withReact, ReactEditor, useSlate, Slate } from 'slate-react'
+import {
+  Editable,
+  withReact,
+  ReactEditor,
+  useSlate,
+  Slate,
+  useReadOnly,
+} from 'slate-react'
 import { Editor, Transforms, createEditor, Range } from 'slate'
 import { withHistory } from 'slate-history'
 
@@ -11,7 +18,12 @@ import { withMarkdownShortcuts } from './markdown'
 import { withPasteHtml } from './paste-html'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code'
 import { withLinks, LinkButton, LinkElement } from './link'
-import { withImages, ImageButton, ImageElement } from './image'
+import {
+  withImages,
+  ImageButton,
+  ImageElement,
+  ImageElementReadOnly,
+} from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
@@ -346,6 +358,7 @@ const isMarkActive = (editor, format) => {
 }
 
 const Element = (props) => {
+  const readOnly = useReadOnly()
   const { attributes, children, element } = props
   const { align, indent } = element
   const style = {}
@@ -358,7 +371,11 @@ const Element = (props) => {
 
   switch (element.type) {
     case 'image':
-      return <ImageElement {...props} />
+      return readOnly ? (
+        <ImageElementReadOnly {...props} />
+      ) : (
+        <ImageElement {...props} />
+      )
     case 'link':
       return <LinkElement {...props} />
     case 'check-list':

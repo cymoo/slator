@@ -78,8 +78,11 @@ export const CheckListElement = ({ attributes, children, element }) => {
           type={checked ? 'checkbox-check' : 'checkbox-uncheck'}
           onClick={(event) => {
             event.preventDefault()
-            const path = ReactEditor.findPath(editor, element)
-            Transforms.setNodes(editor, { checked: !checked }, { at: path })
+            if (!readOnly) {
+              const path = ReactEditor.findPath(editor, element)
+              // TODO: readonly对以下也生效
+              Transforms.setNodes(editor, { checked: !checked }, { at: path })
+            }
           }}
         />
       </span>

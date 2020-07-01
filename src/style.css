@@ -454,6 +454,8 @@ img svg {
 
 .editor figcaption {
   text-align: center;
+  color: #777;
+  font-size: 1em;
   /*transition: opacity 0.2s ease-in;*/
 }
 
