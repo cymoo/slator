@@ -13,7 +13,7 @@ import {
 import { Editor, Transforms, createEditor, Range } from 'slate'
 import { withHistory } from 'slate-history'
 
-import { Button, Icon, Toolbar, Tooltip, TooltipInput } from './components'
+import { Button, Icon, Menu, Tooltip, TooltipInput } from './components'
 import { withMarkdownShortcuts } from './markdown'
 import { withPasteHtml } from './paste-html'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code'
@@ -27,7 +27,7 @@ import {
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
-import { assignIfNotUndefined, imageValidator } from './utils'
+import { assignIfNotUndefined, imageValidator, compose } from './utils'
 import './style.css'
 import 'animate.css/animate.css'
 
@@ -49,6 +49,9 @@ const Slator = (props) => {
     value,
     onChange,
     readOnly,
+    placeholder,
+    spellCheck,
+    autoFocus,
     markdown,
     pastHTML,
     imageUploadRequest,
@@ -81,31 +84,24 @@ const Slator = (props) => {
   const renderLeaf = useCallback((props) => <Leaf {...props} />, [])
   const editor = useMemo(
     () =>
-      withHistory(
-        withPasteHtml(
-          withMarkdownShortcuts(
-            // TODO: 好像没必须要withCheckList
-            withCheckList(
-              withDivider(
-                withImages(withLinks(withCodeBlock(withReact(createEditor()))))
-              )
-            )
-          )
-        )
-      ),
+      compose(
+        withHistory,
+        withPasteHtml,
+        withMarkdownShortcuts,
+        // TODO: 好像没必须要withCheckList
+        withCheckList,
+        withDivider,
+        withImages,
+        withLinks,
+        withCodeBlock,
+        withReact,
+        createEditor
+      )(),
     []
   )
 
   // NOTE: remove it later
   window.editor = editor
-
-  const [showLinkPreview, setShowLinkPreview] = useState(false)
-  const [linkPreviewPosition, setLinkPreviewPosition] = useState([
-    -10000,
-    -10000,
-  ])
-  const [linkPreviewURL, setLinkPreviewURL] = useState('')
-  const linkPreviewTooltip = useRef()
 
   return (
     <Slate
@@ -117,83 +113,15 @@ const Slator = (props) => {
         onChange(value)
       }}
     >
-      <Toolbar
-        style={{ display: 'flex', alignItems: 'center' }}
-        className="toolbar"
-      >
-        <MarkButton format="bold" icon="bold" />
-        <MarkButton format="italic" icon="italic" />
-        <MarkButton format="underline" icon="underline" />
-        <MarkButton format="strikethrough" icon="strikethrough" />
-        <BlockButton
-          format="code-block"
-          icon="code-slash"
-          style={{ fontSize: '125%' }}
-        />
-        <BlockButton format="block-quote" icon="quotes-right" />
-        {/* <BlockButton format="heading-one" icon="header" />*/}
-
-        <BlockButton format="heading-one" icon="font-size" />
-        <BlockButton
-          format="heading-two"
-          icon="font-size"
-          style={{ fontSize: '80%' }}
-        />
-
-        {/* <BlockButton format="heading-one" icon="header1" />*/}
-        {/* <BlockButton format="heading-two" icon="header2" />*/}
-        {/* <BlockButton format="heading-three" icon="header3" />*/}
-
-        <BlockButton format="numbered-list" icon="list-numbered" />
-        <BlockButton format="bulleted-list" icon="list-bulleted" />
-        <CheckListButton />
-        <LinkButton />
-        <ImageButton />
-
-        <ColorButton format="color" />
-        <ColorButton format="background" />
-
-        <AlignButton format="left" icon="paragraph-left" />
-        <AlignButton format="right" icon="paragraph-right" />
-        <AlignButton format="justify" icon="paragraph-justify" />
-        <AlignButton format="center" icon="paragraph-center" />
-
-        <IndentButton format="indent" icon="indent-increase" />
-        <IndentButton format="unindent" icon="indent-decrease" />
-
-        <MarkButton format="sup" icon="superscript" />
-        <MarkButton format="sub" icon="subscript" />
-
-        <DividerButton />
-
-        <Button
-          onMouseDown={(event) => {
-            event.preventDefault()
-            editor.undo()
-            // console.log(editor.operations)
-          }}
-        >
-          <Icon type="undo" />
-        </Button>
-        <Button>
-          <Icon
-            type="redo"
-            onMouseDown={(event) => {
-              event.preventDefault()
-              editor.redo()
-              // console.log(editor.operations)
-            }}
-          />
-        </Button>
-      </Toolbar>
+      <Toolbar />
       <Editable
         className="editor"
         renderElement={renderElement}
         renderLeaf={renderLeaf}
-        placeholder="找到她..."
-        spellCheck
+        placeholder={placeholder}
+        spellCheck={spellCheck}
         readOnly={readOnly}
-        autoFocus
+        autoFocus={autoFocus}
         onKeyDown={(event) => {
           for (const hotkey in HOTKEYS) {
             if (isHotkey(hotkey, event)) {
@@ -214,6 +142,10 @@ const Slator = (props) => {
         }}
         // https://developer.mozilla.org/zh-CN/docs/Web/API/DataTransfer/setData
         onDrop={(event) => {
+          if (readOnly) {
+            return
+          }
+
           const imgId = event.dataTransfer.getData('image-id')
           if (!imgId) {
             return
@@ -246,69 +178,101 @@ const Slator = (props) => {
           }
         }}
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
-        onMouseUp={(event) => {
-          const selection = editor.selection
-          if (selection && Range.isCollapsed(selection)) {
-            const [match] = Editor.nodes(editor, {
-              match: (node) => node.type === 'link',
-            })
-            if (match) {
-              event.preventDefault()
-              const range = Editor.range(editor, match[1])
-              const domRange = ReactEditor.toDOMRange(editor, range)
-              const rect = domRange.getBoundingClientRect()
-              const top = rect.top + window.pageYOffset - 13
-              const left = rect.left + window.pageXOffset - rect.width / 2
-
-              setShowLinkPreview(true)
-              setLinkPreviewURL(match[0].url)
-              setLinkPreviewPosition([top, left])
-            } else {
-              setShowLinkPreview(false)
-              setLinkPreviewURL('')
-              setLinkPreviewPosition([-10000, -10000])
-            }
-          }
+        // onMouseUp={(event) => {
+        // }}
+        onSelect={(event) => {
+          // const domRange = window.getSelection().getRangeAt(0)
         }}
         style={{ minHeight: 300 }}
       />
-      {showLinkPreview && (
-        <Tooltip
-          width="auto"
-          ref={linkPreviewTooltip}
-          className="tooltip"
-          style={{
-            top: linkPreviewPosition[0],
-            left: linkPreviewPosition[1],
-          }}
-        >
-          <a
-            href={linkPreviewURL}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontSize: 14,
-              color: 'white',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-          >
-            {linkPreviewURL}
-          </a>
-        </Tooltip>
-      )}
     </Slate>
   )
 }
 
 Slator.defaultProps = {
   readOnly: false,
+  placeholder: 'how can we live without a story to tell',
+  spellCheck: true,
+  autoFocus: true,
   markdown: true,
   pasteHtml: true,
   imageRetryDelay: 3,
   imageRetryCount: 5,
   allowedImageTypes: ['png', 'jpg', 'jpeg', 'gif'],
   maxImageSize: 1024 * 1024 * 5,
+}
+
+const Toolbar = (props) => {
+  const editor = useSlate()
+
+  return (
+    <Menu style={{ display: 'flex', alignItems: 'center' }} className="toolbar">
+      <MarkButton format="bold" icon="bold" />
+      <MarkButton format="italic" icon="italic" />
+      <MarkButton format="underline" icon="underline" />
+      <MarkButton format="strikethrough" icon="strikethrough" />
+      <BlockButton
+        format="code-block"
+        icon="code-slash"
+        style={{ fontSize: '125%' }}
+      />
+      <BlockButton format="block-quote" icon="quotes-right" />
+      {/* <BlockButton format="heading-one" icon="header" />*/}
+
+      <BlockButton format="heading-one" icon="font-size" />
+      <BlockButton
+        format="heading-two"
+        icon="font-size"
+        style={{ fontSize: '80%' }}
+      />
+
+      {/* <BlockButton format="heading-one" icon="header1" />*/}
+      {/* <BlockButton format="heading-two" icon="header2" />*/}
+      {/* <BlockButton format="heading-three" icon="header3" />*/}
+
+      <BlockButton format="numbered-list" icon="list-numbered" />
+      <BlockButton format="bulleted-list" icon="list-bulleted" />
+      <CheckListButton />
+      <LinkButton />
+      <ImageButton />
+
+      <ColorButton format="color" />
+      <ColorButton format="background" />
+
+      <AlignButton format="left" icon="paragraph-left" />
+      <AlignButton format="right" icon="paragraph-right" />
+      <AlignButton format="justify" icon="paragraph-justify" />
+      <AlignButton format="center" icon="paragraph-center" />
+
+      <IndentButton format="indent" icon="indent-increase" />
+      <IndentButton format="unindent" icon="indent-decrease" />
+
+      <MarkButton format="sup" icon="superscript" />
+      <MarkButton format="sub" icon="subscript" />
+
+      <DividerButton />
+
+      <Button
+        onMouseDown={(event) => {
+          event.preventDefault()
+          editor.undo()
+          // console.log(editor.operations)
+        }}
+      >
+        <Icon type="undo" />
+      </Button>
+      <Button>
+        <Icon
+          type="redo"
+          onMouseDown={(event) => {
+            event.preventDefault()
+            editor.redo()
+            // console.log(editor.operations)
+          }}
+        />
+      </Button>
+    </Menu>
+  )
 }
 
 const toggleBlock = (editor, format) => {
@@ -576,4 +540,3 @@ const IndentButton = ({ format, icon }) => {
 }
 
 export default Slator
-export { imageValidator }

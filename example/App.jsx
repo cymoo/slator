@@ -29,7 +29,7 @@ const App = () => {
     >
       <ErrorCatcher>
         <Slator
-          readOnly
+          // readOnly
           value={value}
           onChange={(value) => setValue(value)}
           imageUploadRequest={() => {

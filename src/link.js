@@ -3,10 +3,10 @@ import isUrl from 'is-url'
 import { useSlate, useEditor, ReactEditor } from 'slate-react'
 import { Transforms, Editor, Range } from 'slate'
 
-import { Button, Icon } from './components'
+import { Button, Icon, Portal } from './components'
 import { css, cx } from 'emotion'
 import { useClickAway } from './utils'
-import { TooltipInput } from './components'
+import { TooltipInput, Tooltip } from './components'
 
 // TODO: 双击某一个段落时，也会选中下一个段落的开头，这是BUG?
 export const withLinks = (editor) => {
@@ -37,31 +37,8 @@ export const withLinks = (editor) => {
   return editor
 }
 
-// export const LinkButton1 = () => {
-//   const editor = useSlate()
-//   return (
-//     <Button
-//       active={isLinkActive(editor)}
-//       onMouseDown={(event) => {
-//         event.preventDefault()
-//         if (isLinkActive(editor)) {
-//           unwrapLink(editor)
-//         } else {
-//           const url = window.prompt('Enter the URL of the link:')
-//           if (url) {
-//             insertLink(editor, url)
-//           }
-//         }
-//       }}
-//     >
-//       <Icon type="bi-link" />
-//     </Button>
-//   )
-// }
-
 export const LinkButton = () => {
   const editor = useSlate()
-  // const editor = useEditor()
   const [show, setShow] = useState(false)
   const [position, setPosition] = useState([-10000, -10000])
 
@@ -126,43 +103,74 @@ export const LinkButton = () => {
 }
 
 export const LinkElement = ({ attributes, children, element }) => {
-  // const [show, setShow] = useState(false)
-  // const ref = useClickAway(
-  //   useCallback(() => {
-  //     show && setShow(false)
-  //   }, [show])
-  // )
+  const editor = useEditor()
+  const [show, setShow] = useState(false)
+  const [position, setPosition] = useState([0, 0])
+  const ref = useClickAway(
+    useCallback(() => {
+      show && setShow(false)
+    }, [show])
+  )
+  const tooltipRef = useRef()
 
+  // 如果缺少{userSelect: 'none'}，则会抛异常，Uncaught Error: Cannot resolve a Slate node from DOM node: url
+  // 参考某个issue
   return (
-    <a
+    <span
       {...attributes}
-      href={element.url}
-      // ref={ref}
-      // onClick={(event) => {
-      //   event.preventDefault()
-      //   setShow(true)
-      // }}
-      // style={{ display: 'inline-block' }}
+      ref={ref}
+      onClick={(event) => {
+        event.preventDefault()
+        // TODO: 为什么使用以下的函数会出错
+        // const el = ReactEditor.toDOMNode(editor, element)
+        const el = ref.current
+        const rect = el.getBoundingClientRect()
+        setShow(true)
+        setTimeout(() => {
+          const tooltip = tooltipRef.current
+          const left =
+            rect.left +
+            window.pageXOffset -
+            tooltip.offsetWidth / 2 +
+            rect.width / 2
+          // const top = rect.top + window.pageYOffset + tooltip.offsetHeight
+          const top = rect.top + window.pageYOffset
+          setPosition([left, top])
+        }, 0)
+      }}
     >
-      {/* {show && (*/}
-      {/*  <Tooltip width="auto" contentEditable={false}>*/}
-      {/*    <span*/}
-      {/*      data-href={element.url}*/}
-      {/*      style={{*/}
-      {/*        color: 'white',*/}
-      {/*        cursor: 'pointer',*/}
-      {/*        textDecoration: 'underline',*/}
-      {/*      }}*/}
-      {/*      onClick={(event) => {*/}
-      {/*        event.preventDefault()*/}
-      {/*      }}*/}
-      {/*    >*/}
-      {/*      {element.url}*/}
-      {/*    </span>*/}
-      {/*  </Tooltip>*/}
-      {/* )}*/}
-      {children}
-    </a>
+      {show && (
+        // 需要使用portal，否则会出错，见以下issue
+        // https://github.com/ianstormtaylor/slate/issues/3421
+        <Portal>
+          <Tooltip
+            ref={tooltipRef}
+            width="auto"
+            contentEditable={false}
+            style={{
+              left: position[0],
+              top: position[1],
+              height: 'auto',
+            }}
+          >
+            <a
+              href={element.url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                color: 'white',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: '1em',
+              }}
+            >
+              {element.url}
+            </a>
+          </Tooltip>
+        </Portal>
+      )}
+      <a href={element.url}>{children}</a>
+    </span>
   )
 }
 

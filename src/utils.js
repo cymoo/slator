@@ -26,6 +26,9 @@ export const randomString = (length = 6, type = 'all') => {
     .join('')
 }
 
+export const compose = (...funcs) =>
+  funcs.reduce((acc, func) => (...args) => acc(func(...args)))
+
 export const useClickAway = (onClickAway, dom) => {
   const element = useRef()
 

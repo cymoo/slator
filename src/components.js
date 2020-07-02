@@ -181,23 +181,23 @@ export const Portal = ({ children }) => {
   return ReactDOM.createPortal(children, document.body)
 }
 
-export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
-  <Menu
-    {...props}
-    ref={ref}
-    className={cx(
-      // 'shadow-v3',
-      className,
-      css`
-        position: relative;
-        padding: 1px 18px 17px;
-        margin: 0 -20px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.09);
-        margin-bottom: 20px;
-      `
-    )}
-  />
-))
+// export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
+//   <Menu
+//     {...props}
+//     ref={ref}
+//     className={cx(
+//       // 'shadow-v3',
+//       className,
+//       css`
+//         position: relative;
+//         padding: 1px 18px 17px;
+//         margin: 0 -20px;
+//         border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+//         margin-bottom: 20px;
+//       `
+//     )}
+//   />
+// ))
 
 // TEST
 export const Tooltip = React.forwardRef((props, ref) => {
@@ -225,7 +225,7 @@ export const Tooltip = React.forwardRef((props, ref) => {
   // }
 
   return (
-    <div
+    <span
       ref={ref}
       className={cx(
         className,
@@ -242,6 +242,10 @@ export const Tooltip = React.forwardRef((props, ref) => {
           background-color: #444;
           border-radius: 25px;
           color: #fff;
+          // 以下为必须，否则如果用在非void元素中时，会出错
+          user-select: none;
+          // 以下为必须，否则宽度不对
+          word-break: normal;
         `
       )}
       onClick={(event) => {
@@ -265,7 +269,7 @@ export const Tooltip = React.forwardRef((props, ref) => {
         )}
       />
       {children}
-    </div>
+    </span>
   )
 })
 
