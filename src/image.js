@@ -337,7 +337,8 @@ export const ImageElement = (props) => {
                 Transforms.move(editor)
               } else {
                 const start = Editor.start(editor, Path.next(path))
-                Transforms.move(editor, start)
+                // Transforms.move(editor, start)
+                Transforms.select(editor, start)
               }
               const root = ReactEditor.toDOMNode(editor, editor)
               root.focus({ preventScroll: true })
@@ -471,7 +472,7 @@ const setImageNode = (editor, id, props, saveHistory = false) => {
   }
 }
 
-const insertImage = (editor, file, url, alt = '', el = null) => {
+const insertImage = (editor, file, url, alt = '') => {
   const img = {
     type: 'image',
     id: randomString(),

@@ -398,7 +398,7 @@ const AddMediaButton = (props) => {
         const [node, path] = match
         // const start = Editor.start(editor, path)
         // if (Point.equals(selection.anchor, start)) {
-        // TODO: 删掉再回退图片时，按钮位置会有问题？？
+        // TODO: 删掉再回退图片时，按钮位置会有问题？？可能与图片的显示方式有关（先隐藏再显示）
         if (Editor.string(editor, path).length === 0) {
           console.log('show')
           const el = ReactEditor.toDOMNode(editor, node)
