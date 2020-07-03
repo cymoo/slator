@@ -46,6 +46,7 @@ import './style.css'
 import 'animate.css/animate.css'
 
 import _ from 'lodash'
+import { css } from 'emotion'
 
 window._ = _
 
@@ -117,10 +118,6 @@ const Slator = (props) => {
   // NOTE: remove it later
   window.editor = editor
 
-  // TEST
-  const [floatingPosition, setFloatingPosition] = useState([-10000, -10000])
-  const floatingRef = useRef()
-
   return (
     <Slate
       editor={editor}
@@ -135,11 +132,8 @@ const Slator = (props) => {
       }}
     >
       <Toolbar />
-      {/*<FloatingToolBar />*/}
-      {/*  ref={floatingRef}*/}
-      {/*  left={floatingPosition[0]}*/}
-      {/*  top={floatingPosition[1]}*/}
-      {/* />*/}
+      <FloatingToolBar />
+      <AddMediaButton />
       <Editable
         className="editor"
         renderElement={renderElement}
@@ -322,12 +316,6 @@ const Toolbar = (props) => {
 }
 
 const FloatingToolBar = (props) => {
-  // const [show, setShow] = useState(false)
-  // const ref1 = useClickAway(
-  //   useCallback(() => {
-  //     show && setShow(false)
-  //   }, [show])
-  // )
   const ref = useRef(null)
   const editor = useSlate()
 
@@ -353,7 +341,7 @@ const FloatingToolBar = (props) => {
     const domSelection = window.getSelection()
     const domRange = domSelection.getRangeAt(0)
     const rect = domRange.getBoundingClientRect()
-    el.style.opacity = 0.97
+    el.style.opacity = 0.95
     el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight - 50}px`
     el.style.left = `${
       rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
@@ -362,11 +350,17 @@ const FloatingToolBar = (props) => {
 
   return (
     <Portal>
-      <Menu ref={ref} style={{}} className="floating-toolbar">
+      <Menu ref={ref} className="floating-toolbar">
         <MarkButton format="bold" icon="bold" />
         <MarkButton format="italic" icon="italic" />
         <MarkButton format="underline" icon="underline" />
+
         <BlockButton format="block-quote" icon="quotes-right" />
+        <BlockButton
+          format="code-block"
+          icon="code-slash"
+          style={{ fontSize: '125%' }}
+        />
 
         <BlockButton format="heading-one" icon="font-size" />
         <BlockButton
@@ -381,6 +375,81 @@ const FloatingToolBar = (props) => {
         <LinkButton />
       </Menu>
     </Portal>
+  )
+}
+
+const AddMediaButton = (props) => {
+  const ref = useRef(null)
+  const editor = useSlate()
+
+  useEffect(() => {
+    const { selection } = editor
+    const btn = ref.current
+    if (
+      selection &&
+      Range.isCollapsed(selection) &&
+      ReactEditor.isFocused(editor)
+    ) {
+      const match = Editor.above(editor, {
+        match: (node) => node.type === 'paragraph',
+      })
+
+      if (match) {
+        const [node, path] = match
+        // const start = Editor.start(editor, path)
+        // if (Point.equals(selection.anchor, start)) {
+        // TODO: 删掉再回退图片时，按钮位置会有问题？？
+        if (Editor.string(editor, path).length === 0) {
+          console.log('show')
+          const el = ReactEditor.toDOMNode(editor, node)
+          console.log(el)
+          const rect = el.getBoundingClientRect()
+          btn.style.left = `${-45}px`
+          btn.style.top = `${rect.top + window.pageYOffset - 31}px`
+          btn.style.opacity = 1
+          return
+        }
+      }
+    }
+    console.log('hide')
+    btn.style.opacity = 0
+  })
+
+  return (
+    <button
+      ref={ref}
+      className={css`
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        text-align: center;
+        font-size: 36px;
+        background: transparent;
+        vertical-align: bottom;
+        white-space: nowrap;
+        padding: 0;
+        margin: 0;
+        margin-right: 15px;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        outline: none;
+        border: 1px solid rgb(153, 153, 153);
+        border-radius: 50%;
+        // transition: opacity 0.25s ease-in-out;
+      `}
+    >
+      <Icon
+        type="plus-circle"
+        style={{
+          // width: 30,
+          // height: 23,
+          position: 'relative',
+          left: 5,
+          top: 4,
+        }}
+      />
+    </button>
   )
 }
 
@@ -556,7 +625,7 @@ const BlockButton = ({ format, icon, ...rest }) => {
   const isActive = isBlockActive(editor, format)
   return (
     <Button
-      title={format}
+      className={isActive ? 'active' : ''}
       active={isActive}
       onMouseDown={(event) => {
         event.preventDefault()
@@ -574,6 +643,7 @@ const MarkButton = ({ format, icon, ...rest }) => {
   const isActive = isMarkActive(editor, format)
   return (
     <Button
+      className={isActive ? 'active' : ''}
       active={isActive}
       onMouseDown={(event) => {
         event.preventDefault()
