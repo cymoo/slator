@@ -105,7 +105,7 @@ export const LinkButton = () => {
 export const LinkElement = ({ attributes, children, element }) => {
   const editor = useEditor()
   const [show, setShow] = useState(false)
-  const [position, setPosition] = useState([0, 0])
+  const [position, setPosition] = useState([-10000, -10000])
   const ref = useClickAway(
     useCallback(() => {
       show && setShow(false)

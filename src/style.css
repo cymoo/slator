@@ -47,10 +47,32 @@ img svg {
 .toolbar {
   position: relative;
   padding: 1px 18px 17px;
-  margin: 0 -20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.09);
-  margin-bottom: 20px;
+  margin: 0 -20px 20px;
   font-size: 18px;
+}
+
+.floating-toolbar {
+  padding-top: 15px;
+  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  width: auto;
+  font-size: 18px;
+  position: absolute;
+  /*padding: 8px 7px 6px;*/
+  z-index: 1;
+  margin-top: -6px;
+  /*top: -10000px;*/
+  /*left: -10000px;*/
+  opacity: 0;
+  background-color: #333;
+  border-radius: 4px;
+  transition: opacity 0.75s;
+}
+
+.floating-toolbar svg {
+  fill: white;
 }
 
 .icon {

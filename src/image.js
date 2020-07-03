@@ -346,6 +346,7 @@ export const ImageElement = (props) => {
         </figcaption>
       </div>
       {children}
+      {/* <span style={{ userSelect: 'none' }}>{children}</span>*/}
     </figure>
   )
 }
@@ -476,7 +477,7 @@ const insertImage = (editor, file, url, alt = '', el = null) => {
     type: 'image',
     id: randomString(),
     alt,
-    children: [{ text: '' }],
+    // children: [{ text: '' }],
   }
   if (url) img.url = url
   if (file) {

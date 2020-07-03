@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import isHotkey from 'is-hotkey'
 import HotKeys from './hotkeys'
@@ -10,10 +10,19 @@ import {
   Slate,
   useReadOnly,
 } from 'slate-react'
-import { Editor, Transforms, createEditor, Range } from 'slate'
-import { withHistory } from 'slate-history'
+import {
+  Editor,
+  Transforms,
+  createEditor,
+  Range,
+  Path,
+  Node,
+  Point,
+  // Element,
+} from 'slate'
+import { withHistory, HistoryEditor } from 'slate-history'
 
-import { Button, Icon, Menu, Tooltip, TooltipInput } from './components'
+import { Button, Icon, Menu, Portal, Tooltip, TooltipInput } from './components'
 import { withMarkdownShortcuts } from './markdown'
 import { withPasteHtml } from './paste-html'
 import { withCodeBlock, toggleCodeBlock, CodeBlock } from './code'
@@ -27,7 +36,12 @@ import {
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
 import { withCheckList, CheckListButton, CheckListElement } from './checklist'
-import { assignIfNotUndefined, imageValidator, compose } from './utils'
+import {
+  assignIfNotUndefined,
+  imageValidator,
+  compose,
+  useClickAway,
+} from './utils'
 import './style.css'
 import 'animate.css/animate.css'
 
@@ -103,6 +117,10 @@ const Slator = (props) => {
   // NOTE: remove it later
   window.editor = editor
 
+  // TEST
+  const [floatingPosition, setFloatingPosition] = useState([-10000, -10000])
+  const floatingRef = useRef()
+
   return (
     <Slate
       editor={editor}
@@ -110,10 +128,18 @@ const Slator = (props) => {
       onChange={(value) => {
         // console.log(editor.selection)
         // setValue(value)
+        HistoryEditor.withoutSaving(editor, () =>
+          fixChromeDoubleClickBug(editor)
+        )
         onChange(value)
       }}
     >
       <Toolbar />
+      {/*<FloatingToolBar />*/}
+      {/*  ref={floatingRef}*/}
+      {/*  left={floatingPosition[0]}*/}
+      {/*  top={floatingPosition[1]}*/}
+      {/* />*/}
       <Editable
         className="editor"
         renderElement={renderElement}
@@ -123,6 +149,8 @@ const Slator = (props) => {
         readOnly={readOnly}
         autoFocus={autoFocus}
         onKeyDown={(event) => {
+          // fixChromeDoubleClickBug(editor)
+
           for (const hotkey in HOTKEYS) {
             if (isHotkey(hotkey, event)) {
               event.preventDefault()
@@ -180,9 +208,27 @@ const Slator = (props) => {
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
         // onMouseUp={(event) => {
         // }}
-        onSelect={(event) => {
-          // const domRange = window.getSelection().getRangeAt(0)
-        }}
+        // TODO: 为什么点击选取却无法取消选取？？
+        // onSelect={(event) => {
+        //   const domSelection = window.getSelection()
+        //   if (ReactEditor.isFocused(editor) && domSelection) {
+        //     const domRange = domSelection.getRangeAt(0)
+        //     if (!domSelection.isCollapsed) {
+        //       const rect = domRange.getBoundingClientRect()
+        //       const el = floatingRef.current
+        //       const top = rect.top + window.pageYOffset - el.offsetHeight - 30
+        //       // const top = rect.top + window.pageYOffset - el.offsetHeight
+        //       const left =
+        //         rect.left +
+        //         window.pageXOffset -
+        //         el.offsetWidth / 2 +
+        //         rect.width / 2
+        //       setFloatingPosition([left, top])
+        //     } else {
+        //       setFloatingPosition([-10000, -10000])
+        //     }
+        //   }
+        // }}
         style={{ minHeight: 300 }}
       />
     </Slate>
@@ -275,7 +321,72 @@ const Toolbar = (props) => {
   )
 }
 
+const FloatingToolBar = (props) => {
+  // const [show, setShow] = useState(false)
+  // const ref1 = useClickAway(
+  //   useCallback(() => {
+  //     show && setShow(false)
+  //   }, [show])
+  // )
+  const ref = useRef(null)
+  const editor = useSlate()
+
+  useEffect(() => {
+    const el = ref.current
+    const { selection } = editor
+
+    if (!el) {
+      return
+    }
+
+    if (
+      !selection ||
+      !ReactEditor.isFocused(editor) ||
+      Range.isCollapsed(selection) ||
+      Editor.string(editor, selection) === ''
+    ) {
+      el.removeAttribute('style')
+      return
+    }
+
+    // TODO: 尝试加入flip动画
+    const domSelection = window.getSelection()
+    const domRange = domSelection.getRangeAt(0)
+    const rect = domRange.getBoundingClientRect()
+    el.style.opacity = 0.97
+    el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight - 50}px`
+    el.style.left = `${
+      rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
+    }px`
+  })
+
+  return (
+    <Portal>
+      <Menu ref={ref} style={{}} className="floating-toolbar">
+        <MarkButton format="bold" icon="bold" />
+        <MarkButton format="italic" icon="italic" />
+        <MarkButton format="underline" icon="underline" />
+        <BlockButton format="block-quote" icon="quotes-right" />
+
+        <BlockButton format="heading-one" icon="font-size" />
+        <BlockButton
+          format="heading-two"
+          icon="font-size"
+          style={{ fontSize: '80%' }}
+        />
+
+        <BlockButton format="numbered-list" icon="list-numbered" />
+        <BlockButton format="bulleted-list" icon="list-bulleted" />
+        <CheckListButton />
+        <LinkButton />
+      </Menu>
+    </Portal>
+  )
+}
+
 const toggleBlock = (editor, format) => {
+  // fixChromeDoubleClickBug(editor)
+
   if (format === 'code-block') {
     toggleCodeBlock(editor)
     return
@@ -537,6 +648,17 @@ const IndentButton = ({ format, icon }) => {
       <Icon type={icon} />
     </Button>
   )
+}
+
+// BUG and COMPT: chrome下双击选中会有bug，会选中下一个block void element中的zero-width字符
+const fixChromeDoubleClickBug = (editor) => {
+  const { selection } = editor
+  if (selection && selection.focus.offset === 1) {
+    const [node, _] = Editor.node(editor, Path.parent(selection.focus.path))
+    if (Editor.isVoid(editor, node) && Editor.isBlock(editor, node)) {
+      Transforms.move(editor, { reverse: true, edge: 'focus' })
+    }
+  }
 }
 
 export default Slator
