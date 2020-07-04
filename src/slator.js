@@ -46,7 +46,7 @@ import './style.css'
 import 'animate.css/animate.css'
 
 import _ from 'lodash'
-import { css } from 'emotion'
+import { css, cx } from 'emotion'
 
 window._ = _
 
@@ -58,6 +58,26 @@ const HOTKEYS = {
 }
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
+
+const withResetDefaultElement = (editor) => {
+  const { insertBreak } = editor
+
+  editor.insertBreak = () => {
+    const [match] = Editor.nodes(editor, {
+      match: (node) =>
+        ['heading-one', 'heading-two', 'heading-three', 'block-quote'].includes(
+          node.type
+        ),
+    })
+    if (match) {
+      Editor.insertNode(editor, { type: 'paragraph', children: [{ text: '' }] })
+    } else {
+      insertBreak()
+    }
+  }
+
+  return editor
+}
 
 const Slator = (props) => {
   const {
@@ -103,6 +123,7 @@ const Slator = (props) => {
         withHistory,
         withPasteHtml,
         withMarkdownShortcuts,
+        withResetDefaultElement,
         // TODO: 好像没必须要withCheckList
         withCheckList,
         withDivider,
@@ -378,13 +399,19 @@ const FloatingToolBar = (props) => {
   )
 }
 
+// TEST
 const AddMediaButton = (props) => {
   const ref = useRef(null)
   const editor = useSlate()
+  // const [show, setShow] = useState(false)
 
+  // const ref = useClickAway(() => {
+  //   setShow(false)
+  // })
   useEffect(() => {
     const { selection } = editor
-    const btn = ref.current
+    const menu = ref.current
+    menu.classList.remove('is-scaled')
     if (
       selection &&
       Range.isCollapsed(selection) &&
@@ -399,57 +426,79 @@ const AddMediaButton = (props) => {
         // const start = Editor.start(editor, path)
         // if (Point.equals(selection.anchor, start)) {
         // TODO: 删掉再回退图片时，按钮位置会有问题？？可能与图片的显示方式有关（先隐藏再显示）
-        if (Editor.string(editor, path).length === 0) {
+        // if (Editor.string(editor, path).length === 0) {
+        if (
+          node.children.length === 1 &&
+          Array.from(Node.texts(node)).length === 1 &&
+          Node.string(node) === ''
+        ) {
           console.log('show')
           const el = ReactEditor.toDOMNode(editor, node)
           console.log(el)
           const rect = el.getBoundingClientRect()
-          btn.style.left = `${-45}px`
-          btn.style.top = `${rect.top + window.pageYOffset - 31}px`
-          btn.style.opacity = 1
+          menu.style.left = `${rect.left - 55}px`
+          menu.style.top = `${rect.top + window.pageYOffset - 31}px`
+          menu.style.opacity = 1
           return
         }
       }
     }
     console.log('hide')
-    btn.style.opacity = 0
+    menu.style.opacity = 0
   })
 
   return (
-    <button
-      ref={ref}
-      className={css`
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-        text-align: center;
-        font-size: 36px;
-        background: transparent;
-        vertical-align: bottom;
-        white-space: nowrap;
-        padding: 0;
-        margin: 0;
-        margin-right: 15px;
-        width: 32px;
-        height: 32px;
-        line-height: 32px;
-        outline: none;
-        border: 1px solid rgb(153, 153, 153);
-        border-radius: 50%;
-        // transition: opacity 0.25s ease-in-out;
-      `}
-    >
-      <Icon
-        type="plus-circle"
-        style={{
-          // width: 30,
-          // height: 23,
-          position: 'relative',
-          left: 5,
-          top: 4,
-        }}
-      />
-    </button>
+    <Portal>
+      <div
+        ref={ref}
+        className={cx(
+          'tooltip-menu',
+          css`
+            position: absolute;
+            opacity: 0;
+          `
+        )}
+      >
+        <button
+          ref={ref}
+          className={css`
+            // transition: opacity 0.25s ease-in-out;
+          `}
+          onMouseDown={(event) => {
+            event.preventDefault()
+            // setShow((show) => !show)
+            ref.current.classList.toggle('is-scaled')
+          }}
+        >
+          <Icon
+            type="plus-circle"
+            style={{
+              // width: 30,
+              // height: 23,
+              position: 'relative',
+              left: 5,
+              top: 4,
+            }}
+          />
+        </button>
+        <div
+          className={cx(
+            css`
+              margin-left: 9px;
+              display: inline-block;
+              width: 0;
+            `
+          )}
+        >
+          <button className="tooltip-btn">
+            <Icon type="camera" style={{ width: 18, height: 18, top: -4 }} />
+          </button>
+          <button className="tooltip-btn">
+            <Icon type="video" style={{ width: 18, height: 18, top: -4 }} />
+          </button>
+        </div>
+      </div>
+    </Portal>
   )
 }
 

@@ -78,6 +78,40 @@ img svg {
   fill: mediumaquamarine;
 }
 
+.tooltip-menu {
+  position: absolute;
+  word-wrap: normal;
+  white-space: nowrap;
+}
+.tooltip-menu button {
+  cursor: pointer;
+  text-align: center;
+  font-size: 36px;
+  background: transparent;
+  vertical-align: bottom;
+  white-space: nowrap;
+  padding: 0;
+  margin: 0 15px 0 0;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  outline: none;
+  border: 1px solid rgb(153, 153, 153);
+  border-radius: 50%;
+}
+.tooltip-menu svg {
+  position: relative;
+  fill: rgb(153, 153, 153);
+}
+.tooltip-menu div button {
+  transform: scale(0);
+  transition: transform 100ms ease 0s, border-color 100ms ease 0s, color 100ms ease 0s;
+}
+.tooltip-menu.is-scaled div button {
+  transform: scale(1) !important;
+  transition: transform 250ms ease 0s, border-color 100ms ease 0s, color 100ms ease 0s !important;
+}
+
 
 .icon {
   display: inline-block;
