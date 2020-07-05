@@ -32,6 +32,7 @@ import {
   ImageButton,
   ImageElement,
   ImageElementReadOnly,
+  selectImage,
 } from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
@@ -432,9 +433,7 @@ const AddMediaButton = (props) => {
           Array.from(Node.texts(node)).length === 1 &&
           Node.string(node) === ''
         ) {
-          console.log('show')
           const el = ReactEditor.toDOMNode(editor, node)
-          console.log(el)
           const rect = el.getBoundingClientRect()
           menu.style.left = `${rect.left - 55}px`
           menu.style.top = `${rect.top + window.pageYOffset - 31}px`
@@ -443,7 +442,6 @@ const AddMediaButton = (props) => {
         }
       }
     }
-    console.log('hide')
     menu.style.opacity = 0
   })
 
@@ -490,7 +488,13 @@ const AddMediaButton = (props) => {
             `
           )}
         >
-          <button className="tooltip-btn">
+          <button
+            className="tooltip-btn"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              selectImage(editor, true)
+            }}
+          >
             <Icon type="camera" style={{ width: 18, height: 18, top: -4 }} />
           </button>
           <button className="tooltip-btn">

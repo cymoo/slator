@@ -353,31 +353,55 @@ export const ImageElement = (props) => {
 
 export const ImageButton = () => {
   const editor = useEditor()
-  const ref = React.useRef()
+  // const ref = React.useRef()
 
   return (
     <Button
       onMouseDown={(event) => {
         event.preventDefault()
-        ref.current.click()
+        // ref.current.click()
+        selectImage(editor)
       }}
     >
       <Icon type="image" />
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        ref={ref}
-        style={{ display: 'none' }}
-        onChange={() => {
-          for (const file of ref.current.files) {
-            insertImage(editor, file, '')
-          }
-          ref.current.value = ''
-        }}
-      />
+      {/* <input*/}
+      {/*  type="file"*/}
+      {/*  multiple*/}
+      {/*  accept="image/*"*/}
+      {/*  ref={ref}*/}
+      {/*  style={{ display: 'none' }}*/}
+      {/*  onChange={() => {*/}
+      {/*    for (const file of ref.current.files) {*/}
+      {/*      insertImage(editor, file, '')*/}
+      {/*    }*/}
+      {/*    ref.current.value = ''*/}
+      {/*  }}*/}
+      {/* />*/}
     </Button>
   )
+}
+
+export const selectImage = (editor, trim = false) => {
+  const input = document.createElement('input')
+  input.setAttribute('type', 'file')
+  input.setAttribute('multiple', true)
+  input.setAttribute('accept', 'image/*')
+  input.click()
+
+  input.onchange = () => {
+    if (trim) {
+      const [match] = Editor.nodes(editor, {
+        match: (node) => node.type === 'paragraph',
+      })
+      if (match) {
+        Transforms.removeNodes(editor, { at: match[1] })
+      }
+    }
+    for (const file of input.files) {
+      insertImage(editor, file, '')
+    }
+    input.value = ''
+  }
 }
 
 const CaptionInput = ({ caption, onChange, onEnter, ...rest }) => {
