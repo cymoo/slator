@@ -22,6 +22,7 @@ const App = () => {
       className={css`
         position: relative;
         margin-top: 30px;
+        margin-bottom: 30px;
         margin-left: auto;
         margin-right: auto;
         max-width: 1000px;
@@ -32,6 +33,7 @@ const App = () => {
           // readOnly
           value={value}
           onChange={(value) => setValue(value)}
+          placeholder=""
           imageUploadRequest={() => {
             return new Promise((resolve, reject) => {
               setTimeout(() => {

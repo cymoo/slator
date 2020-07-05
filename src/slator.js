@@ -61,7 +61,7 @@ const HOTKEYS = {
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const withResetDefaultElement = (editor) => {
-  const { insertBreak } = editor
+  const { insertBreak, insertText } = editor
 
   editor.insertBreak = () => {
     const [match] = Editor.nodes(editor, {
@@ -75,6 +75,15 @@ const withResetDefaultElement = (editor) => {
     } else {
       insertBreak()
     }
+  }
+
+  // TEST
+  editor.insertText = (text) => {
+    const masks = Editor.marks(editor)
+    // if (masks.bold) {
+    //   Editor.removeMark(editor, 'bold')
+    // }
+    insertText(text)
   }
 
   return editor
@@ -359,15 +368,15 @@ const FloatingToolBar = (props) => {
       return
     }
 
-    // TODO: 尝试加入flip动画
     const domSelection = window.getSelection()
     const domRange = domSelection.getRangeAt(0)
     const rect = domRange.getBoundingClientRect()
     el.style.opacity = 0.95
+    // TODO: 处理上下左右四个边界溢出的问题
     el.style.top = `${rect.top + window.pageYOffset - el.offsetHeight - 50}px`
-    el.style.left = `${
+    const left =
       rect.left + window.pageXOffset - el.offsetWidth / 2 + rect.width / 2
-    }px`
+    el.style.left = `${Math.max(left, 15)}px`
   })
 
   return (
@@ -402,13 +411,14 @@ const FloatingToolBar = (props) => {
 
 // TEST
 const AddMediaButton = (props) => {
-  const ref = useRef(null)
+  // const ref = useRef(null)
   const editor = useSlate()
   // const [show, setShow] = useState(false)
 
-  // const ref = useClickAway(() => {
-  //   setShow(false)
-  // })
+  const ref = useClickAway(() => {
+    const menu = ref.current
+    menu.classList.remove('is-scaled')
+  })
   useEffect(() => {
     const { selection } = editor
     const menu = ref.current

@@ -7,8 +7,8 @@ const SHORTCUTS = {
   '###': 'heading-three',
   '*': 'list-item',
   '-': 'list-item',
+  '+': 'list-item',
   '1.': 'list-item',
-  // '+': 'list-item',
   '>': 'block-quote',
   '``': 'code-block',
   '[]-': 'check-list',
@@ -20,7 +20,7 @@ export const withMarkdownShortcuts = (editor) => {
 
   editor.insertText = (text) => {
     const { selection } = editor
-
+    // block element
     if (text === ' ' && selection && Range.isCollapsed(selection)) {
       const { anchor } = selection
       const block = Editor.above(editor, {
@@ -57,6 +57,38 @@ export const withMarkdownShortcuts = (editor) => {
         return
       }
     }
+
+    // `: inline code
+    if (text === '`' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // *: italic; **: bold; *** italic and bold
+    if (text === '*' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // ~~: strikethrough
+    if (text === '~' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // ---: divider
+    if (text === '-' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // [text](url "title") | [text](url) : link
+    if (text === ')' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // ![alt](url "title") | ![alt](url) : image
+    if (text === ')' && selection && Range.isCollapsed(selection)) {
+      //
+    }
+
+    // table?
 
     insertText(text)
   }
