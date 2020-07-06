@@ -326,21 +326,32 @@ const Toolbar = (props) => {
       <Button
         onMouseDown={(event) => {
           event.preventDefault()
+          const marks = Editor.marks(editor)
+          for (const key in marks) {
+            Editor.removeMark(editor, key)
+          }
+        }}
+      >
+        <Icon type="eraser" />
+      </Button>
+
+      <Button
+        onMouseDown={(event) => {
+          event.preventDefault()
           editor.undo()
           // console.log(editor.operations)
         }}
       >
         <Icon type="undo" />
       </Button>
-      <Button>
-        <Icon
-          type="redo"
-          onMouseDown={(event) => {
-            event.preventDefault()
-            editor.redo()
-            // console.log(editor.operations)
-          }}
-        />
+      <Button
+        onMouseDown={(event) => {
+          event.preventDefault()
+          editor.redo()
+          // console.log(editor.operations)
+        }}
+      >
+        <Icon type="redo" />
       </Button>
     </Menu>
   )
@@ -385,6 +396,7 @@ const FloatingToolBar = (props) => {
         <MarkButton format="bold" icon="bold" />
         <MarkButton format="italic" icon="italic" />
         <MarkButton format="underline" icon="underline" />
+        <MarkButton format="strikethrough" icon="strikethrough" />
 
         <BlockButton format="block-quote" icon="quotes-right" />
         <BlockButton

@@ -169,7 +169,9 @@ export const LinkElement = ({ attributes, children, element }) => {
           </Tooltip>
         </Portal>
       )}
-      <a href={element.url}>{children}</a>
+      <a href={element.url} title={element.title}>
+        {children}
+      </a>
     </span>
   )
 }

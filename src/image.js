@@ -58,7 +58,7 @@ export const withImages = (editor) => {
 
 export const ImageElementReadOnly = (props) => {
   const { attributes, children, element } = props
-  const { url, alt, width, height } = element
+  const { url, alt, width, height, title } = element
   const [imageLoaded, setImageLoaded] = useState(false)
   const placeholder = useRef()
 
@@ -115,6 +115,7 @@ export const ImageElementReadOnly = (props) => {
             }}
             src={url}
             alt={alt}
+            title={title}
             style={imageStyle}
           />
         </div>
@@ -153,7 +154,7 @@ export const ImageElement = (props) => {
   const localImgRef = useRef()
   const imgRef = useRef()
 
-  const { file, url, alt, id } = element
+  const { file, url, alt, id, title } = element
   const objectURL = useMemo(
     () => (file ? window.URL.createObjectURL(file) : ''),
     [file]
@@ -246,6 +247,7 @@ export const ImageElement = (props) => {
             )}
             src={objectURL}
             alt={alt}
+            title={title}
             onClick={(event) => {
               event.preventDefault()
               setCaptionShow(true)
@@ -285,6 +287,7 @@ export const ImageElement = (props) => {
             // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
             src={url}
             alt={alt}
+            title={title}
             className={cx(
               css`
               // opacity: ${imageLoaded ? 1 : 0};

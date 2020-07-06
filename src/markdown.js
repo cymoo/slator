@@ -1,10 +1,11 @@
 import React from 'react'
-import { Editor, Transforms, Range, Point } from 'slate'
+import { Editor, Point, Range, Transforms } from 'slate'
 
 const SHORTCUTS = {
   '#': 'heading-one',
   '##': 'heading-two',
   '###': 'heading-three',
+  '---': 'divider',
   '*': 'list-item',
   '-': 'list-item',
   '+': 'list-item',
@@ -15,6 +16,22 @@ const SHORTCUTS = {
   '[x]-': 'check-list',
 }
 
+const URL_PATTERN = /!?\[(.+)\]\((\S+)(\s.+)?/g
+const INLINE_CODE_PATTERN = /`(.+)/g
+const STRIKE_PATTERN = /~~(.+)~/g
+
+export const getTextBeforeCursor = (editor) => {
+  const { selection } = editor
+  const { anchor } = selection
+  const block = Editor.above(editor, {
+    match: (n) => Editor.isBlock(editor, n),
+  })
+  const path = block ? block[1] : []
+  const start = Editor.start(editor, path)
+  const range = { anchor, focus: start }
+  return Editor.string(editor, range)
+}
+
 export const withMarkdownShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor
 
@@ -22,6 +39,7 @@ export const withMarkdownShortcuts = (editor) => {
     const { selection } = editor
     // block element
     if (text === ' ' && selection && Range.isCollapsed(selection)) {
+      const { selection } = editor
       const { anchor } = selection
       const block = Editor.above(editor, {
         match: (n) => Editor.isBlock(editor, n),
@@ -32,7 +50,6 @@ export const withMarkdownShortcuts = (editor) => {
       const beforeText = Editor.string(editor, range)
       const type = SHORTCUTS[beforeText]
       const props = { type }
-
       if (beforeText === '[]-') props.checked = false
       if (beforeText === '[x]-') props.checked = true
 
@@ -60,7 +77,26 @@ export const withMarkdownShortcuts = (editor) => {
 
     // `: inline code
     if (text === '`' && selection && Range.isCollapsed(selection)) {
-      //
+      const beforeText = getTextBeforeCursor(editor)
+      const match = INLINE_CODE_PATTERN.exec(beforeText)
+      if (match) {
+        const [full, text] = match
+        Transforms.move(editor, {
+          distance: full.length,
+          unit: 'character',
+          reverse: true,
+        })
+        Transforms.delete(editor, { distance: 1, unit: 'character' })
+        Transforms.move(editor, {
+          distance: text.length,
+          unit: 'character',
+          edge: 'focus',
+        })
+        Editor.addMark(editor, 'code', true)
+        Transforms.collapse(editor, { edge: 'focus' })
+        Editor.removeMark(editor, 'code')
+        return
+      }
     }
 
     // *: italic; **: bold; *** italic and bold
@@ -70,25 +106,73 @@ export const withMarkdownShortcuts = (editor) => {
 
     // ~~: strikethrough
     if (text === '~' && selection && Range.isCollapsed(selection)) {
-      //
-    }
-
-    // ---: divider
-    if (text === '-' && selection && Range.isCollapsed(selection)) {
-      //
+      const beforeText = getTextBeforeCursor(editor)
+      const match = STRIKE_PATTERN.exec(beforeText)
+      if (match) {
+        const [full, text] = match
+        // delete the leading two ~~
+        Transforms.move(editor, {
+          distance: full.length,
+          unit: 'character',
+          reverse: true,
+        })
+        Transforms.delete(editor, { distance: 2, unit: 'character' })
+        // delete the trailing one ~
+        Transforms.move(editor, {
+          distance: text.length,
+          unit: 'character',
+        })
+        Transforms.delete(editor, { distance: 1, unit: 'character' })
+        //
+        Transforms.move(editor, {
+          distance: text.length,
+          unit: 'character',
+          edge: 'anchor',
+          reverse: true,
+        })
+        Editor.addMark(editor, 'strikethrough', true)
+        Transforms.collapse(editor, { edge: 'focus' })
+        Editor.removeMark(editor, 'strikethrough')
+        return
+      }
     }
 
     // [text](url "title") | [text](url) : link
-    if (text === ')' && selection && Range.isCollapsed(selection)) {
-      //
-    }
-
     // ![alt](url "title") | ![alt](url) : image
     if (text === ')' && selection && Range.isCollapsed(selection)) {
-      //
-    }
+      const beforeText = getTextBeforeCursor(editor)
+      const match = URL_PATTERN.exec(beforeText)
 
-    // table?
+      if (match) {
+        const [full, text, url, title] = match
+        let element
+        if (full.startsWith('!')) {
+          element = {
+            type: 'image',
+            url,
+            alt: text,
+            title: title && title.trim(),
+            children: [{ text: '' }],
+          }
+        } else {
+          element = {
+            type: 'link',
+            url,
+            title: title && title.trim(),
+            children: [{ text }],
+          }
+        }
+        Transforms.move(editor, {
+          distance: full.length,
+          unit: 'character',
+          reverse: true,
+          edge: 'anchor',
+        })
+        // Transforms.select(editor, editor.selection)
+        Editor.insertNode(editor, element)
+        return
+      }
+    }
 
     insertText(text)
   }
