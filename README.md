@@ -19,4 +19,5 @@
   
 * Double-click will select the next block element in chrome and safari (firefox has done a good job)
 
+
 ...
