@@ -1,5 +1,5 @@
 import React from 'react'
-import { Editor, Point, Range, Transforms, Text } from 'slate'
+import { Editor, Point, Range, Transforms, Text, Location } from 'slate'
 
 const BLOCK_PATTERN = {
   '#': 'heading-one',
@@ -17,11 +17,11 @@ const BLOCK_PATTERN = {
 }
 
 // noinspection RegExpRedundantEscape
-const URL_PATTERN = /!?\[(.+)\]\((\S+)(\s.+)?/g
-const INLINE_CODE_PATTERN = /`(.+)/g
-const STRIKE_PATTERN = /~~(.+)~/g
-const ITALIC_PATTERN = /__(.+)_/g
-const BOLD_PATTERN = /\*\*(.+)\*/g
+const URL_PATTERN = /!?\[(.+)\]\((\S+)(\s.+)?/
+const INLINE_CODE_PATTERN = /`(.+)/
+const STRIKE_PATTERN = /~~(.+)~/
+const ITALIC_PATTERN = /__(.+)_/
+const BOLD_PATTERN = /\*\*(.+)\*/
 
 export const withMarkdownShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor
@@ -211,58 +211,30 @@ const applyMarkOnRange = (
     unit: 'character',
     reverse: true,
   })
-  Transforms.delete(editor, { distance: ll, unit: 'character' })
+  Transforms.delete(editor, {
+    distance: ll,
+    unit: 'character',
+  })
   Transforms.move(editor, {
     distance: text.length,
     unit: 'character',
     edge: 'focus',
   })
-  // Transforms.setNodes(
-  //   editor,
-  //   { [mark]: true },
-  //   { match: (node) => Text.isText(node) }
-  // )
+  // NOTE: 当嵌套的格式存在时，第二次选区的起点会在上一个的最后，比如~~**foo**~~，如果不做以下处理，
+  // 会将上一个节点也格式化。。。好像应该处理此处hang的情况吧。。。
+  // TODO: 此处应该是slate的bug，这样的bug也太难定位了吧。。。fxxk
+  if (
+    Editor.isEnd(editor, editor.selection.anchor, editor.selection.anchor.path)
+  ) {
+    Transforms.move(editor, {
+      distance: 1,
+      edge: 'anchor',
+      unit: 'offset',
+    })
+  }
   Editor.addMark(editor, mark, true)
   Transforms.collapse(editor, { edge: 'focus' })
   if (removeMarkOnDone) {
     Editor.removeMark(editor, mark)
   }
-  // if (rl !== 0) {
-  //   setTimeout(
-  //     () =>
-  //       Transforms.delete(editor, {
-  //         distance: rl,
-  //         unit: 'character',
-  //         reverse: true,
-  //       }),
-  //     2000
-  //   )
-  // }
-  // setTimeout(
-  //   () =>
-  //     Transforms.move(editor, {
-  //       distance: text.length + ll,
-  //       unit: 'character',
-  //       reverse: true,
-  //     }),
-  //   4000
-  // )
-  // setTimeout(
-  //   () => Transforms.delete(editor, { distance: ll, unit: 'character' }),
-  //   6000
-  // )
-  // setTimeout(
-  //   () =>
-  //     Transforms.move(editor, {
-  //       distance: text.length,
-  //       unit: 'character',
-  //       edge: 'focus',
-  //     }),
-  //   8000
-  // )
-  // setTimeout(() => Editor.addMark(editor, mark, true), 10000)
-  // setTimeout(() => Transforms.collapse(editor, { edge: 'focus' }), 12000)
-  // if (removeMarkOnDone) {
-  //   setTimeout(() => Editor.removeMark(editor, mark), 14000)
-  // }
 }
