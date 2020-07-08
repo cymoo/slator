@@ -1,5 +1,6 @@
 import React from 'react'
 import { Editor, Point, Range, Transforms } from 'slate'
+import { truncateLeft } from './utils'
 
 const BLOCK_PATTERN = {
   '#': 'heading-one',
@@ -23,6 +24,8 @@ const STRIKE_PATTERN = /~~(.+)~/
 const ITALIC_PATTERN = /__(.+)_/
 const BOLD_PATTERN = /\*\*(.+)\*/
 
+const MAX_CHARS_TO_MATCH = 300
+
 export const withMarkdownShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor
 
@@ -31,7 +34,10 @@ export const withMarkdownShortcuts = (editor) => {
     // heading, blockquote, code-block, list, divider
     if (text === ' ' && selection && Range.isCollapsed(selection)) {
       const beforeRange = getBeforeRange(editor)
-      const beforeText = Editor.string(editor, beforeRange)
+      const beforeText = truncateLeft(
+        Editor.string(editor, beforeRange),
+        MAX_CHARS_TO_MATCH
+      )
       const type = BLOCK_PATTERN[beforeText]
       const props = { type }
       if (beforeText === '[]-') props.checked = false
@@ -61,7 +67,10 @@ export const withMarkdownShortcuts = (editor) => {
 
     // image or link
     if (text === ')' && selection && Range.isCollapsed(selection)) {
-      const beforeText = Editor.string(editor, getBeforeRange(editor))
+      const beforeText = truncateLeft(
+        Editor.string(editor, getBeforeRange(editor)),
+        MAX_CHARS_TO_MATCH
+      )
       const match = URL_PATTERN.exec(beforeText)
 
       if (match) {
@@ -96,7 +105,10 @@ export const withMarkdownShortcuts = (editor) => {
 
     // inline code
     if (text === '`' && selection && Range.isCollapsed(selection)) {
-      const beforeText = Editor.string(editor, getBeforeRange(editor))
+      const beforeText = truncateLeft(
+        Editor.string(editor, getBeforeRange(editor)),
+        MAX_CHARS_TO_MATCH
+      )
       const match = INLINE_CODE_PATTERN.exec(beforeText)
       if (match) {
         const [_, text] = match
@@ -107,7 +119,10 @@ export const withMarkdownShortcuts = (editor) => {
 
     // italic
     if (text === '_' && selection && Range.isCollapsed(selection)) {
-      const beforeText = Editor.string(editor, getBeforeRange(editor))
+      const beforeText = truncateLeft(
+        Editor.string(editor, getBeforeRange(editor)),
+        MAX_CHARS_TO_MATCH
+      )
       const match = ITALIC_PATTERN.exec(beforeText)
       if (match) {
         const [_, text] = match
@@ -117,7 +132,10 @@ export const withMarkdownShortcuts = (editor) => {
     }
     // bold
     if (text === '*' && selection && Range.isCollapsed(selection)) {
-      const beforeText = Editor.string(editor, getBeforeRange(editor))
+      const beforeText = truncateLeft(
+        Editor.string(editor, getBeforeRange(editor)),
+        MAX_CHARS_TO_MATCH
+      )
       const match = BOLD_PATTERN.exec(beforeText)
       if (match) {
         const [_, text] = match
@@ -128,7 +146,10 @@ export const withMarkdownShortcuts = (editor) => {
 
     // strikethrough
     if (text === '~' && selection && Range.isCollapsed(selection)) {
-      const beforeText = Editor.string(editor, getBeforeRange(editor))
+      const beforeText = truncateLeft(
+        Editor.string(editor, getBeforeRange(editor)),
+        MAX_CHARS_TO_MATCH
+      )
       const match = STRIKE_PATTERN.exec(beforeText)
       if (match) {
         const [_, text] = match

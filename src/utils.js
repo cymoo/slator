@@ -26,6 +26,10 @@ export const randomString = (length = 6, type = 'all') => {
     .join('')
 }
 
+export const truncateLeft = (text, limit) => {
+  return text.length <= limit ? text : text.substr(text.length - limit)
+}
+
 export const compose = (...funcs) =>
   funcs.reduce((acc, func) => (...args) => acc(func(...args)))
 
