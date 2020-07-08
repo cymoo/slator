@@ -1,5 +1,5 @@
 import React from 'react'
-import { Editor, Point, Range, Transforms, Text, Location } from 'slate'
+import { Editor, Point, Range, Transforms } from 'slate'
 
 const BLOCK_PATTERN = {
   '#': 'heading-one',
@@ -129,16 +129,21 @@ export const withMarkdownShortcuts = (editor) => {
     // strikethrough
     if (text === '~' && selection && Range.isCollapsed(selection)) {
       const beforeText = Editor.string(editor, getBeforeRange(editor))
-      console.log(beforeText)
       const match = STRIKE_PATTERN.exec(beforeText)
       if (match) {
         const [_, text] = match
-        console.log(text)
         applyMarkOnRange(editor, text, 2, 1, 'strikethrough')
         return
       }
     }
 
+    const marks = Editor.marks(editor)
+    for (const mark of ['code', 'bold', 'italic', 'strikethrough']) {
+      if (marks[`no-${mark}`]) {
+        Editor.removeMark(editor, mark)
+        Editor.removeMark(editor, `no-${mark}`)
+      }
+    }
     insertText(text)
   }
 
@@ -172,9 +177,10 @@ export const withMarkdownShortcuts = (editor) => {
           return
         }
       }
-
-      deleteBackward(...args)
+      // TODO: 位置放错了吧...
+      // deleteBackward(...args)
     }
+    deleteBackward(...args)
   }
 
   return editor
@@ -191,38 +197,50 @@ const getBeforeRange = (editor) => {
   return { anchor, focus: start }
 }
 
-const applyMarkOnRange = (
-  editor,
-  text,
-  ll,
-  rl,
-  mark,
-  removeMarkOnDone = true
-) => {
+// TODO: 这些操作是否只会触发以下render？
+// TODO: mark的机制有bug，如果range的起点是上一个element的end point，即hanging，此时不应该对上个element施加mark
+const applyMarkOnRange = (editor, text, ll, rl, mark) => {
+  // delete trailing characters
   if (rl !== 0) {
     Transforms.delete(editor, {
       distance: rl,
-      unit: 'character',
       reverse: true,
     })
   }
+
+  // delete leading characters
   Transforms.move(editor, {
     distance: text.length + ll,
-    unit: 'character',
     reverse: true,
   })
   Transforms.delete(editor, {
     distance: ll,
-    unit: 'character',
   })
+
+  // select text and apply marks
   Transforms.move(editor, {
     distance: text.length,
-    unit: 'character',
     edge: 'focus',
   })
-  // NOTE: 当嵌套的格式存在时，第二次选区的起点会在上一个的最后，比如~~**foo**~~，如果不做以下处理，
-  // 会将上一个节点也格式化。。。好像应该处理此处hang的情况吧。。。
-  // TODO: 此处应该是slate的bug，这样的bug也太难定位了吧。。。fxxk
+  moveIfHanging(editor)
+  Editor.addMark(editor, mark, true)
+
+  // NOTE: a trick to select the last character and set a flag
+  Transforms.move(editor, {
+    distance: text.length - 1,
+    edge: 'anchor',
+  })
+  moveIfHanging(editor)
+  Editor.addMark(editor, `no-${mark}`, true)
+
+  // reset the cursor
+  Transforms.collapse(editor, { edge: 'focus' })
+}
+
+// NOTE: 当嵌套的格式存在时，第二次选区的起点会在上一个的最后，比如~~**foo**~~，如果不做以下处理，
+// 会将上一个节点也格式化。。。好像应该处理此处hang的情况吧。。。
+// NOTE: 应该是slate的bug。。。bug也太多了吧。。。
+export const moveIfHanging = (editor) => {
   if (
     Editor.isEnd(editor, editor.selection.anchor, editor.selection.anchor.path)
   ) {
@@ -232,9 +250,14 @@ const applyMarkOnRange = (
       unit: 'offset',
     })
   }
-  Editor.addMark(editor, mark, true)
-  Transforms.collapse(editor, { edge: 'focus' })
-  if (removeMarkOnDone) {
-    Editor.removeMark(editor, mark)
+  if (
+    Editor.isStart(editor, editor.selection.focus, editor.selection.focus.path)
+  ) {
+    Transforms.move(editor, {
+      distance: 1,
+      edge: 'focus',
+      unit: 'offset',
+      reverse: true,
+    })
   }
 }

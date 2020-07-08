@@ -154,8 +154,6 @@ const Slator = (props) => {
       editor={editor}
       value={value}
       onChange={(value) => {
-        // console.log(editor.selection)
-        // setValue(value)
         HistoryEditor.withoutSaving(editor, () =>
           fixChromeDoubleClickBug(editor)
         )
@@ -183,15 +181,6 @@ const Slator = (props) => {
               toggleMark(editor, mark)
             }
           }
-          // console.log(event.key)
-          // if (HotKeys.isUndo(event)) {
-          //   console.log('undo...')
-          //   console.log(editor.operations)
-          // }
-          // if (HotKeys.isRedo(event)) {
-          //   console.log('redo...')
-          //   console.log(editor.operations)
-          // }
         }}
         // https://developer.mozilla.org/zh-CN/docs/Web/API/DataTransfer/setData
         onDrop={(event) => {
@@ -232,6 +221,7 @@ const Slator = (props) => {
         }}
         // TODO: onMouseDown或click触发时，window.getSelection() or editor.selection为上一次的selection?!
         // onMouseUp={(event) => {
+        // //
         // }}
         // TODO: 为什么点击选取却无法取消选取？？
         // onSelect={(event) => {
