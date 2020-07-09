@@ -105,7 +105,8 @@ img svg {
 }
 .tooltip-menu div button {
   transform: scale(0);
-  transition: transform 100ms ease 0s, border-color 100ms ease 0s, color 100ms ease 0s;
+  /*transition: transform 100ms ease 0s, border-color 100ms ease 0s, color 100ms ease 0s;*/
+  transition: none;
 }
 .tooltip-menu.is-scaled div button {
   transform: scale(1) !important;

@@ -130,6 +130,7 @@ export const withMarkdownShortcuts = (editor) => {
         return
       }
     }
+
     // bold
     if (text === '*' && selection && Range.isCollapsed(selection)) {
       const beforeText = truncateLeft(
@@ -243,7 +244,10 @@ const applyMarkOnRange = (editor, text, ll, rl, mark) => {
     distance: text.length,
     edge: 'focus',
   })
-  moveIfHanging(editor)
+  unHangRange(editor)
+  // TODO: 我对hang的理解有误？还是Editor中的方法无效
+  // let range = Editor.unhangRange(editor, editor.selection)
+  // Transforms.setSelection(editor, range)
   Editor.addMark(editor, mark, true)
 
   // NOTE: a trick to select the last character and set a flag
@@ -251,7 +255,9 @@ const applyMarkOnRange = (editor, text, ll, rl, mark) => {
     distance: text.length - 1,
     edge: 'anchor',
   })
-  moveIfHanging(editor)
+  unHangRange(editor)
+  // range = Editor.unhangRange(editor, editor.selection)
+  // Transforms.setSelection(editor, range)
   Editor.addMark(editor, `no-${mark}`, true)
 
   // reset the cursor
@@ -261,7 +267,7 @@ const applyMarkOnRange = (editor, text, ll, rl, mark) => {
 // NOTE: 当嵌套的格式存在时，第二次选区的起点会在上一个的最后，比如~~**foo**~~，如果不做以下处理，
 // 会将上一个节点也格式化。。。好像应该处理此处hang的情况吧。。。
 // NOTE: 应该是slate的bug。。。bug也太多了吧。。。
-export const moveIfHanging = (editor) => {
+export const unHangRange = (editor) => {
   if (
     Editor.isEnd(editor, editor.selection.anchor, editor.selection.anchor.path)
   ) {

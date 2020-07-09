@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import imageExtensions from 'image-extensions'
 import isUrl from 'is-url'
-import { Editor, Transforms, Path } from 'slate'
+import { Editor, Transforms, Path, Range, Point, Node } from 'slate'
 import { useClickAway } from './utils'
 import { useEditor, useFocused, useSelected, ReactEditor } from 'slate-react'
 import { randomString, imageValidator } from './utils'
@@ -18,7 +18,7 @@ import { Button, Icon, LoadingBar } from './components'
 import { css, cx } from 'emotion'
 
 export const withImages = (editor) => {
-  const { insertData, isVoid, insertBreak } = editor
+  const { insertData, isVoid, insertBreak, deleteBackward } = editor
 
   editor.isVoid = (element) => {
     return element.type === 'image' ? true : isVoid(element)
@@ -33,6 +33,39 @@ export const withImages = (editor) => {
     } else {
       insertBreak()
     }
+  }
+
+  // TODO: It's very twisted...need a better method
+  // TODO: why cursor cannot appear at the end of a block void element
+  editor.deleteBackward = (...args) => {
+    const { selection } = editor
+    if (selection && Range.isCollapsed(selection)) {
+      const match = Editor.above(editor, {
+        match: (node) =>
+          Editor.isBlock(editor, node) && !Editor.isVoid(editor, node),
+      })
+      if (match) {
+        const [curr, path] = match
+        const start = Editor.start(editor, path)
+
+        if (Point.equals(selection.anchor, start)) {
+          const [prev, path] = Editor.previous(editor)
+          if (Editor.isBlock(editor, prev) && Editor.isVoid(editor, prev)) {
+            if (
+              curr.children.length === 1 &&
+              Array.from(Node.texts(curr)).length === 1 &&
+              Node.string(curr) === ''
+            ) {
+              Transforms.removeNodes(editor)
+            } else {
+              Transforms.removeNodes(editor, { at: path })
+            }
+            return
+          }
+        }
+      }
+    }
+    deleteBackward(...args)
   }
 
   editor.insertData = (data) => {

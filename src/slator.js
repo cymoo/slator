@@ -61,7 +61,7 @@ const HOTKEYS = {
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
 const withResetDefaultElement = (editor) => {
-  const { insertBreak, insertText } = editor
+  const { insertBreak } = editor
 
   editor.insertBreak = () => {
     const [match] = Editor.nodes(editor, {
@@ -75,15 +75,6 @@ const withResetDefaultElement = (editor) => {
     } else {
       insertBreak()
     }
-  }
-
-  // TEST
-  editor.insertText = (text) => {
-    const masks = Editor.marks(editor)
-    // if (masks.bold) {
-    //   Editor.removeMark(editor, 'bold')
-    // }
-    insertText(text)
   }
 
   return editor
@@ -296,6 +287,7 @@ const Toolbar = (props) => {
       <CheckListButton />
       <LinkButton />
       <ImageButton />
+      <MarkButton icon="file" />
 
       <ColorButton format="color" />
       <ColorButton format="background" />
@@ -511,6 +503,9 @@ const AddMediaButton = (props) => {
           </button>
           <button className="tooltip-btn">
             <Icon type="video" style={{ width: 18, height: 18, top: -4 }} />
+          </button>
+          <button className="tooltip-btn">
+            <Icon type="file" style={{ width: 18, height: 18, top: -4 }} />
           </button>
         </div>
       </div>
