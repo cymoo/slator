@@ -295,7 +295,7 @@ const initialValue = [
   },
   {
     type: 'code-block',
-    children: [{ text: 'def foo():\n    print("hello world")\n' }],
+    children: [{ text: 'def foo():\n    print("hello world")' }],
   },
   {
     type: 'check-list',

@@ -10,12 +10,21 @@ export const withCodeBlock = (editor) => {
       match: (node) => node.type === 'code-block',
     })
     if (match) {
-      const codeText = Editor.string(editor, match[1])
-      if (codeText.endsWith('\n\n')) {
-        editor.deleteBackward()
+      const [_, path] = match
+      const codeText = Editor.string(editor, {
+        anchor: Editor.start(editor, path),
+        focus: editor.selection.anchor,
+      })
+      const indents = getLastIndent(codeText)
+      if (codeText.endsWith(`\n${indents}\n${indents}`)) {
+        Transforms.delete(editor, {
+          distance: indents.length * 2 + 2,
+          unit: 'character',
+          reverse: true,
+        })
         editor.insertNode({ type: 'paragraph', children: [{ text: '' }] })
       } else {
-        editor.insertText('\n')
+        editor.insertText(`\n${indents}`)
       }
       return
     }
@@ -86,4 +95,22 @@ export const CodeBlock = ({ attributes, children, ...rest }) => {
       <code>{children}</code>
     </pre>
   )
+}
+
+const getLastIndent = (text) => {
+  let pos = -1
+  for (let i = text.length - 1; i >= 0; i--) {
+    const chr = text[i]
+    if (chr === '\n') {
+      if (pos === -1) return ''
+      else return text.substring(i + 1, pos + 1)
+    } else {
+      if (' \t'.includes(chr)) {
+        if (pos === -1) pos = i
+      } else {
+        pos = -1
+      }
+    }
+  }
+  return ''
 }

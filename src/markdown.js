@@ -27,7 +27,7 @@ const BOLD_PATTERN = /\*\*(.+)\*/
 const MAX_CHARS_TO_MATCH = 300
 
 export const withMarkdownShortcuts = (editor) => {
-  const { deleteBackward, insertText } = editor
+  const { insertText } = editor
 
   editor.insertText = (text) => {
     const { selection } = editor
@@ -170,40 +170,40 @@ export const withMarkdownShortcuts = (editor) => {
   }
 
   // FIXME: 删除多重嵌套的元素时（当黏贴HTML时才会出现），需要做额外的处理
-  editor.deleteBackward = (...args) => {
-    const { selection } = editor
-
-    if (selection && Range.isCollapsed(selection)) {
-      const match = Editor.above(editor, {
-        match: (n) => Editor.isBlock(editor, n) && !Editor.isVoid(editor, n),
-      })
-
-      if (match) {
-        const [block, path] = match
-        const start = Editor.start(editor, path)
-
-        if (
-          block.type !== 'paragraph' &&
-          Point.equals(selection.anchor, start)
-        ) {
-          Transforms.setNodes(editor, { type: 'paragraph' })
-
-          if (block.type === 'list-item') {
-            Transforms.unwrapNodes(editor, {
-              match: (n) =>
-                n.type === 'bulleted-list' || n.type === 'numbered-list',
-              split: true,
-            })
-          }
-
-          return
-        }
-      }
-      // TODO: 位置放错了吧...
-      // deleteBackward(...args)
-    }
-    deleteBackward(...args)
-  }
+  // editor.deleteBackward = (...args) => {
+  //   const { selection } = editor
+  //
+  //   if (selection && Range.isCollapsed(selection)) {
+  //     const match = Editor.above(editor, {
+  //       match: (n) => Editor.isBlock(editor, n) && !Editor.isVoid(editor, n),
+  //     })
+  //
+  //     if (match) {
+  //       const [block, path] = match
+  //       const start = Editor.start(editor, path)
+  //
+  //       if (
+  //         block.type !== 'paragraph' &&
+  //         Point.equals(selection.anchor, start)
+  //       ) {
+  //         Transforms.setNodes(editor, { type: 'paragraph' })
+  //
+  //         if (block.type === 'list-item') {
+  //           Transforms.unwrapNodes(editor, {
+  //             match: (n) =>
+  //               n.type === 'bulleted-list' || n.type === 'numbered-list',
+  //             split: true,
+  //           })
+  //         }
+  //
+  //         return
+  //       }
+  //     }
+  //     // TODO: 位置放错了吧...
+  //     // deleteBackward(...args)
+  //   }
+  //   deleteBackward(...args)
+  // }
 
   return editor
 }

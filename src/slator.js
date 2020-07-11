@@ -36,7 +36,7 @@ import {
 } from './image'
 import { ColorButton } from './color'
 import { withDivider, DividerButton, DividerElement } from './divider'
-import { withCheckList, CheckListButton, CheckListElement } from './checklist'
+import { CheckListButton, CheckListElement } from './checklist'
 import {
   assignIfNotUndefined,
   imageValidator,
@@ -60,8 +60,20 @@ const HOTKEYS = {
 
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
 
-const withResetDefaultElement = (editor) => {
-  const { insertBreak } = editor
+const prevChar = (editor, selection) => {
+  if (selection === undefined) selection = editor.selection
+  const prevPoint = Editor.before(editor, selection)
+  return Editor.string(editor, { anchor: prevPoint, focus: selection.anchor })
+}
+
+const nextChar = (editor, selection) => {
+  if (selection === undefined) selection = editor.selection
+  const nextPoint = Editor.after(editor, selection)
+  return Editor.string(editor, { anchor: selection.focus, focus: nextPoint })
+}
+
+const withBetterTypingExperience = (editor) => {
+  const { insertBreak, insertText, deleteBackward } = editor
 
   editor.insertBreak = () => {
     const [match] = Editor.nodes(editor, {
@@ -75,6 +87,78 @@ const withResetDefaultElement = (editor) => {
     } else {
       insertBreak()
     }
+  }
+
+  editor.insertText = (text) => {
+    const pc = prevChar(editor)
+    insertText(text)
+
+    if ('[({<'.includes(text)) {
+      if (text === '[') Editor.insertText(editor, ']')
+      if (text === '(') Editor.insertText(editor, ')')
+      if (text === '{') Editor.insertText(editor, '}')
+      if (text === '<') Editor.insertText(editor, '>')
+      Transforms.move(editor, { reverse: true })
+    }
+    if (text === '"' && pc !== '"') {
+      Editor.insertText(editor, '"')
+      Transforms.move(editor, { reverse: true })
+    }
+    if (text === "'" && pc !== "'") {
+      Editor.insertText(editor, "'")
+      Transforms.move(editor, { reverse: true })
+    }
+  }
+
+  // TODO: 删除多重嵌套的元素时（当黏贴HTML时才会出现），需要做额外的处理
+  editor.deleteBackward = (...args) => {
+    const { selection } = editor
+
+    // reset to paragraph
+    if (selection && Range.isCollapsed(selection)) {
+      const match = Editor.above(editor, {
+        match: (n) => Editor.isBlock(editor, n) && !Editor.isVoid(editor, n),
+      })
+
+      if (match) {
+        const [block, path] = match
+        const start = Editor.start(editor, path)
+
+        if (
+          block.type !== 'paragraph' &&
+          Point.equals(selection.anchor, start)
+        ) {
+          Transforms.setNodes(editor, { type: 'paragraph' }) // need match?
+
+          if (block.type === 'list-item') {
+            Transforms.unwrapNodes(editor, {
+              match: (n) =>
+                n.type === 'bulleted-list' || n.type === 'numbered-list',
+              split: true,
+            })
+          }
+          return
+        }
+      }
+    }
+
+    // just for user experience
+    if (selection && Range.isCollapsed(selection)) {
+      const pc = prevChar(editor)
+      const nc = nextChar(editor)
+      if (
+        (pc === '[' && nc === ']') ||
+        (pc === '(' && nc === ')') ||
+        (pc === '{' && nc === '}') ||
+        (pc === '<' && nc === '>') ||
+        (pc === '"' && nc === '"') ||
+        (pc === "'" && nc === "'")
+      ) {
+        Editor.deleteForward(editor, { unit: 'character' })
+      }
+    }
+
+    deleteBackward(...args)
   }
 
   return editor
@@ -123,10 +207,10 @@ const Slator = (props) => {
       compose(
         withHistory,
         withPasteHtml,
+        withBetterTypingExperience,
         withMarkdownShortcuts,
-        withResetDefaultElement,
         // TODO: 好像没必须要withCheckList
-        withCheckList,
+        // withCheckList,
         withDivider,
         withImages,
         withLinks,
@@ -377,8 +461,8 @@ const FloatingToolBar = (props) => {
       <Menu ref={ref} className="floating-toolbar">
         <MarkButton format="bold" icon="bold" />
         <MarkButton format="italic" icon="italic" />
-        <MarkButton format="underline" icon="underline" />
-        <MarkButton format="strikethrough" icon="strikethrough" />
+        {/*<MarkButton format="underline" icon="underline" />*/}
+        {/*<MarkButton format="strikethrough" icon="strikethrough" />*/}
 
         <BlockButton format="block-quote" icon="quotes-right" />
         <BlockButton

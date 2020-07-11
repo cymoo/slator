@@ -4,38 +4,6 @@ import { useEditor, useReadOnly, useSlate, ReactEditor } from 'slate-react'
 import { Button, Icon } from './components'
 import { cx, css } from 'emotion'
 
-export const withCheckList = (editor) => {
-  const { deleteBackward } = editor
-
-  editor.deleteBackward = (...args) => {
-    const { selection } = editor
-
-    if (selection && Range.isCollapsed(selection)) {
-      const [match] = Editor.nodes(editor, {
-        match: (n) => n.type === 'check-list',
-      })
-
-      if (match) {
-        const [, path] = match
-        const start = Editor.start(editor, path)
-
-        if (Point.equals(selection.anchor, start)) {
-          Transforms.setNodes(
-            editor,
-            { type: 'paragraph' },
-            { match: (n) => n.type === 'check-list' }
-          )
-          return
-        }
-      }
-    }
-
-    deleteBackward(...args)
-  }
-
-  return editor
-}
-
 export const CheckListButton = () => {
   const editor = useSlate()
   const isActive = isCheckListActive(editor)
