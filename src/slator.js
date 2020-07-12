@@ -17,8 +17,8 @@ import {
   Range,
   Path,
   Node,
+  Text,
   Point,
-  // Element,
 } from 'slate'
 import { withHistory, HistoryEditor } from 'slate-history'
 
@@ -63,12 +63,14 @@ const LIST_TYPES = ['numbered-list', 'bulleted-list']
 const prevChar = (editor, selection) => {
   if (selection === undefined) selection = editor.selection
   const prevPoint = Editor.before(editor, selection)
+  if (!prevPoint) return ''
   return Editor.string(editor, { anchor: prevPoint, focus: selection.anchor })
 }
 
 const nextChar = (editor, selection) => {
   if (selection === undefined) selection = editor.selection
   const nextPoint = Editor.after(editor, selection)
+  if (!nextPoint) return ''
   return Editor.string(editor, { anchor: selection.focus, focus: nextPoint })
 }
 
@@ -91,7 +93,25 @@ const withBetterTypingExperience = (editor) => {
 
   editor.insertText = (text) => {
     const pc = prevChar(editor)
+    const nc = nextChar(editor)
+    if (
+      (text === ']' && pc === '[' && nc === ']') ||
+      (text === ')' && pc === '(' && nc === ')') ||
+      (text === '}' && pc === '{' && nc === '}') ||
+      (text === '>' && pc === '<' && nc === '>') ||
+      (text === '"' && pc === '"' && nc === '"') ||
+      (text === "'" && pc === "'" && nc === "'")
+    ) {
+      Transforms.move(editor)
+      return
+    }
+
     insertText(text)
+
+    // markdown shortcuts
+    if (text === '(' && pc === ']') {
+      return
+    }
 
     if ('[({<'.includes(text)) {
       if (text === '[') Editor.insertText(editor, ']')
@@ -168,6 +188,7 @@ const Slator = (props) => {
   const {
     value,
     onChange,
+    vim,
     readOnly,
     placeholder,
     spellCheck,
@@ -223,6 +244,11 @@ const Slator = (props) => {
 
   // NOTE: remove it later
   window.editor = editor
+
+  useEffect(() => {
+    console.log('marks')
+    console.log(editor.marks)
+  })
 
   return (
     <Slate
@@ -404,8 +430,15 @@ const Toolbar = (props) => {
       <Button
         onMouseDown={(event) => {
           event.preventDefault()
-          editor.undo()
+          // editor.undo()
           // console.log(editor.operations)
+          const [text] = Editor.nodes(editor, {
+            match: (node) => Text.isText(node),
+          })
+          console.log(text)
+          if (text) {
+            console.log(text[0].foo)
+          }
         }}
       >
         <Icon type="undo" />
@@ -413,8 +446,9 @@ const Toolbar = (props) => {
       <Button
         onMouseDown={(event) => {
           event.preventDefault()
-          editor.redo()
+          // editor.redo()
           // console.log(editor.operations)
+          Editor.insertNode(editor, { text: 'foobar', foo: 'bar' })
         }}
       >
         <Icon type="redo" />

@@ -39,10 +39,10 @@
     "react": "^16.13.1",
     "react-color": "^2.18.1",
     "react-dom": "^16.13.1",
-    "slate": "^0.58.3",
-    "slate-history": "^0.58.3",
-    "slate-hyperscript": "^0.58.3",
-    "slate-react": "^0.58.3",
+    "slate": "^0.58.4",
+    "slate-history": "^0.58.4",
+    "slate-hyperscript": "^0.58.4",
+    "slate-react": "^0.58.4",
     "typescript": "^3.9.5"
   },
   "devDependencies": {
