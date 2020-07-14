@@ -86,8 +86,11 @@ const withBetterTypingExperience = (editor) => {
           node.type
         ),
     })
-    if (match) {
-      Editor.insertNode(editor, { type: 'paragraph', children: [{ text: '' }] })
+    if (match && Editor.isEnd(editor, editor.selection.focus, match[1])) {
+      Editor.insertNode(editor, {
+        type: 'paragraph',
+        children: [{ text: '' }],
+      })
     } else {
       insertBreak()
     }
