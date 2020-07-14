@@ -8,7 +8,6 @@ import { css, cx } from 'emotion'
 import { useClickAway } from './utils'
 import { TooltipInput, Tooltip } from './components'
 
-// TODO: 双击某一个段落时，也会选中下一个段落的开头，这是BUG?
 export const withLinks = (editor) => {
   const { insertData, insertText, isInline } = editor
 

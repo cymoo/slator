@@ -180,7 +180,6 @@ export const ImageElement = (props) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // test
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const ref = useClickAway(() => setCaptionShow(false))
@@ -312,10 +311,10 @@ export const ImageElement = (props) => {
               event.dataTransfer.setData('image-id', id)
             }}
             onDrag={(event) => {
-              //
+              // event.preventDefault()
             }}
             onDragEnd={(event) => {
-              // event.preventDefault()
+              //
             }}
             // https://developer.mozilla.org/zh-CN/docs/Web/API/File/Using_files_from_web_applications
             src={url}
@@ -337,7 +336,6 @@ export const ImageElement = (props) => {
         )}
         {loading && <LoadingBar />}
         {error && <ErrorMask onError={uploadImage} />}
-        {/* {error && <span style={{ color: 'red' }}>网络错误，稍后自动重试</span>}*/}
         <figcaption
           style={{
             opacity: !captionShow && alt === '' ? 0 : 1,
@@ -389,30 +387,15 @@ export const ImageElement = (props) => {
 
 export const ImageButton = () => {
   const editor = useEditor()
-  // const ref = React.useRef()
 
   return (
     <Button
       onMouseDown={(event) => {
         event.preventDefault()
-        // ref.current.click()
         selectImage(editor)
       }}
     >
       <Icon type="image" />
-      {/* <input*/}
-      {/*  type="file"*/}
-      {/*  multiple*/}
-      {/*  accept="image/*"*/}
-      {/*  ref={ref}*/}
-      {/*  style={{ display: 'none' }}*/}
-      {/*  onChange={() => {*/}
-      {/*    for (const file of ref.current.files) {*/}
-      {/*      insertImage(editor, file, '')*/}
-      {/*    }*/}
-      {/*    ref.current.value = ''*/}
-      {/*  }}*/}
-      {/* />*/}
     </Button>
   )
 }

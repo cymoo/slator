@@ -50,6 +50,8 @@ import _ from 'lodash'
 import { css, cx } from 'emotion'
 
 window._ = _
+window.Transforms = Transforms
+window.Editor = Editor
 
 const HOTKEYS = {
   'mod+b': 'bold',
@@ -245,10 +247,7 @@ const Slator = (props) => {
   // NOTE: remove it later
   window.editor = editor
 
-  useEffect(() => {
-    console.log('marks')
-    console.log(editor.marks)
-  })
+  useEffect(() => {})
 
   return (
     <Slate
@@ -432,13 +431,19 @@ const Toolbar = (props) => {
           event.preventDefault()
           // editor.undo()
           // console.log(editor.operations)
-          const [text] = Editor.nodes(editor, {
-            match: (node) => Text.isText(node),
+          // const [text] = Editor.nodes(editor, {
+          //   match: (node) => Text.isText(node),
+          // })
+          // console.log(text)
+          // if (text) {
+          //   console.log(text[0].foo)
+          // }
+          Transforms.move(editor, {
+            distance: 1,
+            unit: 'character',
+            reverse: true,
           })
-          console.log(text)
-          if (text) {
-            console.log(text[0].foo)
-          }
+          console.log(editor.selection)
         }}
       >
         <Icon type="undo" />
