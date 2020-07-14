@@ -159,13 +159,13 @@ export const withMarkdownShortcuts = (editor) => {
       }
     }
 
-    const marks = Editor.marks(editor)
-    for (const mark of ['code', 'bold', 'italic', 'strikethrough']) {
-      if (marks[`no-${mark}`]) {
-        Editor.removeMark(editor, mark)
-        Editor.removeMark(editor, `no-${mark}`)
-      }
-    }
+    // const marks = Editor.marks(editor)
+    // for (const mark of ['code', 'bold', 'italic', 'strikethrough']) {
+    //   if (marks[`no-${mark}`]) {
+    //     Editor.removeMark(editor, mark)
+    //     Editor.removeMark(editor, `no-${mark}`)
+    //   }
+    // }
     insertText(text)
   }
 
@@ -226,15 +226,16 @@ const applyMarkOnRange = (editor, text, ll, rl, mark) => {
   Editor.addMark(editor, mark, true)
 
   /* 4. a trick to select the last character and set a flag */
-  Transforms.move(editor, {
-    distance: text.length - 1,
-    edge: 'anchor',
-  })
-  unHangRange(editor)
-  Editor.addMark(editor, `no-${mark}`, true)
+  // Transforms.move(editor, {
+  //   distance: text.length - 1,
+  //   edge: 'anchor',
+  // })
+  // unHangRange(editor)
+  // Editor.addMark(editor, `no-${mark}`, true)
 
   /* 5. reset the cursor */
   Transforms.collapse(editor, { edge: 'focus' })
+  Editor.removeMark(editor, mark)
 }
 
 export const unHangRange = (editor) => {
