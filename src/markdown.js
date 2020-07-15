@@ -1,5 +1,5 @@
 import React from 'react'
-import { Editor, Point, Range, Transforms } from 'slate'
+import { Editor, Point, Range, Text, Transforms } from 'slate'
 import { truncateLeft } from './utils'
 
 const BLOCK_PATTERN = {
@@ -26,6 +26,7 @@ const BOLD_PATTERN = /\*\*(.+)\*\*/
 
 const MAX_CHARS_TO_MATCH = 300
 
+// TODO: firefox在使用内联语法（如** ~~）后，插入下一个字符会有bug，甚至会crash editor
 export const withMarkdownShortcuts = (editor) => {
   const { insertText } = editor
 
@@ -159,13 +160,19 @@ export const withMarkdownShortcuts = (editor) => {
       }
     }
 
-    // const marks = Editor.marks(editor)
-    // for (const mark of ['code', 'bold', 'italic', 'strikethrough']) {
-    //   if (marks[`no-${mark}`]) {
-    //     Editor.removeMark(editor, mark)
-    //     Editor.removeMark(editor, `no-${mark}`)
-    //   }
-    // }
+    const marks = Editor.marks(editor)
+    const [entry] = Editor.nodes(editor, {
+      match: (node) => Text.isText(node),
+    })
+    if (
+      marks.markdown &&
+      Editor.isEnd(editor, editor.selection.anchor, entry[1])
+    )
+      for (const key of Object.keys(marks)) {
+        if (key.startsWith('md-')) {
+          Editor.removeMark(editor, key.substr(3))
+        }
+      }
     insertText(text)
   }
 
@@ -186,6 +193,7 @@ const getBeforeRange = (editor) => {
 // TODO: 这些操作是否只会触发以下render？
 // TODO: mark的机制有bug，如果range的起点是上一个element的end point，即hanging，此时不应该对上个element施加mark
 const applyMarkOnRange = (editor, text, ll, rl, mark) => {
+  // debugger
   /* 1. delete trailing character */
   if (rl !== 0) {
     Transforms.delete(editor, {
@@ -223,19 +231,12 @@ const applyMarkOnRange = (editor, text, ll, rl, mark) => {
   // let range = Editor.unhangRange(editor, editor.selection)
   // Transforms.setSelection(editor, range)
   unHangRange(editor)
+  Editor.addMark(editor, 'markdown', true)
   Editor.addMark(editor, mark, true)
+  Editor.addMark(editor, `md-${mark}`, true)
 
-  /* 4. a trick to select the last character and set a flag */
-  // Transforms.move(editor, {
-  //   distance: text.length - 1,
-  //   edge: 'anchor',
-  // })
-  // unHangRange(editor)
-  // Editor.addMark(editor, `no-${mark}`, true)
-
-  /* 5. reset the cursor */
+  /* 4. reset the cursor */
   Transforms.collapse(editor, { edge: 'focus' })
-  Editor.removeMark(editor, mark)
 }
 
 export const unHangRange = (editor) => {
