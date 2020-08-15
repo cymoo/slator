@@ -399,7 +399,7 @@ const Toolbar = (props) => {
       <CheckListButton />
       <LinkButton />
       <ImageButton />
-      <MarkButton icon="file" />
+      {/*<MarkButton icon="file" />*/}
 
       <ColorButton format="color" />
       <ColorButton format="background" />
@@ -629,9 +629,6 @@ const AddMediaButton = (props) => {
           </button>
           <button className="tooltip-btn">
             <Icon type="video" style={{ width: 18, height: 18, top: -4 }} />
-          </button>
-          <button className="tooltip-btn">
-            <Icon type="file" style={{ width: 18, height: 18, top: -4 }} />
           </button>
         </div>
       </div>

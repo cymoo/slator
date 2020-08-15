@@ -15,6 +15,8 @@
 
 * Mark issue: `Editor.addMark` incorrectly applies marks when `hanging-cursor` happens
 
+* Mark issue: `Editor.removeMark` with firefox...
+
 * Cursor issue: When deleting (backward) the first letter with some marks on it, the cursor will jump to the previous block element
 
 * Double-click will select the next void block element (the focus's offset is 1), 

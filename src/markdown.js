@@ -164,15 +164,24 @@ export const withMarkdownShortcuts = (editor) => {
     const [entry] = Editor.nodes(editor, {
       match: (node) => Text.isText(node),
     })
+    // TODO: 此处firefox会有bug，施加格式后，下一个插入的字符会被忽略
     if (
       marks.markdown &&
       Editor.isEnd(editor, editor.selection.anchor, entry[1])
-    )
+    ) {
+      // console.log(JSON.stringify(editor.selection))
+      // console.log(JSON.stringify(Editor.marks(editor)))
+      // console.log('***')
+      Editor.removeMark(editor, 'markdown')
       for (const key of Object.keys(marks)) {
         if (key.startsWith('md-')) {
           Editor.removeMark(editor, key.substr(3))
+          Editor.removeMark(editor, key)
         }
       }
+    }
+    // console.log(JSON.stringify(Editor.marks(editor)))
+    // console.log(JSON.stringify(editor.selection))
     insertText(text)
   }
 
@@ -190,10 +199,8 @@ const getBeforeRange = (editor) => {
   return { anchor, focus: start }
 }
 
-// TODO: 这些操作是否只会触发以下render？
 // TODO: mark的机制有bug，如果range的起点是上一个element的end point，即hanging，此时不应该对上个element施加mark
 const applyMarkOnRange = (editor, text, ll, rl, mark) => {
-  // debugger
   /* 1. delete trailing character */
   if (rl !== 0) {
     Transforms.delete(editor, {
